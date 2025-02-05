@@ -1,15 +1,12 @@
+---
 name: Linting and Fix Issues
-
 on:
   pull_request:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
-
 permissions:
   contents: write
   statuses: write
-
 jobs:
   fix-lint-issues:
     runs-on: ubuntu-latest
@@ -19,7 +16,6 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.PAT_TOKEN }}
-
       - name: Super-Linter
         uses: super-linter/super-linter@latest
         env:
@@ -27,7 +23,6 @@ jobs:
           VALIDATE_GITHUB_ACTIONS: false
           VALIDATE_CHECKOV: false
           VALIDATE_JSCPD: false
-
       - name: Commit and push linting fixes
         if: >
           github.event_name == 'pull_request' && github.ref_name !=

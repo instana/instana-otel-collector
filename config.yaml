@@ -1,0 +1,45 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:24317
+
+processors:
+  batch:
+
+exporters:
+  debug:
+    verbosity: detailed
+  otlp:
+    endpoint: localhost:4317
+    headers:
+      x-instana-key: instanalocal
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp, debug]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp, debug]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp, debug]
+  telemetry:
+    logs:
+      level: debug
+  extensions: [opamp]
+
+extensions:
+  opamp:
+    server:
+      ws:
+        endpoint: ws://127.0.0.1:4320/v1/opamp
+        tls:
+          insecure_skip_verify: true 

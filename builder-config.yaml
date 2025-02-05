@@ -1,6 +1,6 @@
 dist:
   name: otelcol-dev
-  description: Basic OTel Collector distribution for Developers
+  description: Instana Distibution of OpenTelemetry Collector
   output_path: ./otelcol-dev
   #otelcol_version: 0.118.0
 

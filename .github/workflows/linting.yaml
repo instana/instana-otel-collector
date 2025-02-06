@@ -1,0 +1,37 @@
+---
+name: Linting and Fix Issues
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+  statuses: write
+jobs:
+  fix-lint-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PAT_TOKEN }}
+      - name: Super-Linter
+        uses: super-linter/super-linter@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          VALIDATE_GITHUB_ACTIONS: false
+          VALIDATE_CHECKOV: false
+          VALIDATE_JSCPD: false
+        continue-on-error: true
+      - name: Commit and push linting fixes
+        if: >
+          github.event_name == 'pull_request' && github.ref_name !=
+          github.event.repository.default_branch
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          branch: ${{ github.event.pull_request.head.ref || github.head_ref ||
+            github.ref }}
+          commit_message: "chore: fix linting issues"
+          commit_user_name: super-linter
+          commit_user_email: super-linter@super-linter.dev

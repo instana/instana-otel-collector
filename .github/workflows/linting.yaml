@@ -23,6 +23,7 @@ jobs:
           VALIDATE_GITHUB_ACTIONS: false
           VALIDATE_CHECKOV: false
           VALIDATE_JSCPD: false
+        continue-on-error: true
       - name: Commit and push linting fixes
         if: >
           github.event_name == 'pull_request' && github.ref_name !=

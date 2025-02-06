@@ -84,11 +84,9 @@ jobs:
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
         with:
-          name:
-            instana-otel-collector-release-v${{
+          name: instana-otel-collector-release-v${{
             needs.versioning.outputs.new_version }}
-          path:
-            instana-otel-collector-release-v${{
+          path: instana-otel-collector-release-v${{
             needs.versioning.outputs.new_version }}.tar.gz
   release:
     name: Package and Release on GitHub
@@ -98,8 +96,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name:
-            instana-otel-collector-release-v${{
+          name: instana-otel-collector-release-v${{
             needs.versioning.outputs.new_version }}
       - name: Create GitHub Release
         id: create-release
@@ -118,10 +115,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
-          asset_path:
-            instana-otel-collector-release-v${{
+          asset_path: instana-otel-collector-release-v${{
             needs.versioning.outputs.new_version }}.tar.gz
-          asset_name:
-            instana-otel-collector-release-v${{
+          asset_name: instana-otel-collector-release-v${{
             needs.versioning.outputs.new_version }}.tar.gz
           asset_content_type: application/gzip

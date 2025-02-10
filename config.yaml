@@ -4,6 +4,9 @@ receivers:
     protocols:
       grpc:
         endpoint: 0.0.0.0:24317
+  filelog:
+    include: ["/var/log/*.log"]
+    include_file_path: true
 processors:
   batch:
 exporters:
@@ -13,6 +16,7 @@ exporters:
     endpoint: localhost:4317
     headers:
       x-instana-key: instanalocal
+      x-instana-host: "yourhost.ibm.com"
     tls:
       insecure: true
 service:
@@ -22,8 +26,8 @@ service:
       processors: [batch]
       exporters: [otlp, debug]
     logs:
-      receivers: [otlp]
-      processors: [batch]
+      receivers: [otlp, filelog]
+      processors: [transform/severity_parse, batch]
       exporters: [otlp, debug]
     metrics:
       receivers: [otlp]

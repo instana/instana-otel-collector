@@ -8,7 +8,15 @@ receivers:
     include: ["/var/log/*.log"]
     include_file_path: true
 processors:
-  batch:
+  batch: {}
+  transform/severity_parse:
+    log_statements:
+      - context: log
+        statements:
+          - set(severity_text, "Info") where IsMatch(body.string, ".*INFO.*")
+          - set(severity_text, "Warn") where IsMatch(body.string, ".*WARN.*")
+          - set(severity_text, "Error") where IsMatch(body.string, ".*ERROR.*")
+          - set(severity_text, "Fatal") where IsMatch(body.string, ".*FATAL.*")
 exporters:
   debug:
     verbosity: detailed

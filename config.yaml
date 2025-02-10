@@ -4,6 +4,16 @@ receivers:
     protocols:
       grpc:
         endpoint: 0.0.0.0:24317
+  hostmetrics:
+    collection_interval: 1s
+    scrapers:
+      load:
+      filesystem:
+      memory:
+      network:
+      paging:
+      process:
+      system:
 processors:
   batch:
 exporters:
@@ -26,7 +36,7 @@ service:
       processors: [batch]
       exporters: [otlp, debug]
     metrics:
-      receivers: [otlp]
+      receivers: [otlp, hostmetrics]
       processors: [batch]
       exporters: [otlp, debug]
   telemetry:

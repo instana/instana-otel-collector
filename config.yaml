@@ -5,7 +5,7 @@ receivers:
       grpc:
         endpoint: 0.0.0.0:24317
   hostmetrics:
-    collection_interval: 1s
+    collection_interval: 1m
     scrapers:
       load:
       filesystem:

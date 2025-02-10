@@ -7,6 +7,16 @@ receivers:
   filelog:
     include: ["/var/log/*.log"]
     include_file_path: true
+  hostmetrics:
+    collection_interval: 1m
+    scrapers:
+      load:
+      filesystem:
+      memory:
+      network:
+      paging:
+      process:
+      system:
 processors:
   batch: {}
   transform/severity_parse:
@@ -38,7 +48,7 @@ service:
       processors: [transform/severity_parse, batch]
       exporters: [otlp, debug]
     metrics:
-      receivers: [otlp]
+      receivers: [otlp, hostmetrics]
       processors: [batch]
       exporters: [otlp, debug]
   telemetry:

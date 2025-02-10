@@ -19,6 +19,10 @@ extensions:
   - gomod:
       github.com/open-telemetry/opentelemetry-collector-contrib/extension/opampextension
       v0.118.0
+# extensions:
+#   - gomod:
+#       github.com/open-telemetry/opentelemetry-collector-contrib/extension/opampextension
+#       v0.118.0
 providers:
   - gomod: go.opentelemetry.io/collector/confmap/provider/envprovider v1.18.0
   - gomod: go.opentelemetry.io/collector/confmap/provider/fileprovider v1.18.0

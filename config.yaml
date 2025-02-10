@@ -4,6 +4,9 @@ receivers:
     protocols:
       grpc:
         endpoint: 0.0.0.0:24317
+  filelog:
+    include: ["/var/log/*.log"]
+    include_file_path: true
   hostmetrics:
     collection_interval: 1m
     scrapers:
@@ -15,7 +18,15 @@ receivers:
       process:
       system:
 processors:
-  batch:
+  batch: {}
+  transform/severity_parse:
+    log_statements:
+      - context: log
+        statements:
+          - set(severity_text, "Info") where IsMatch(body.string, ".*INFO.*")
+          - set(severity_text, "Warn") where IsMatch(body.string, ".*WARN.*")
+          - set(severity_text, "Error") where IsMatch(body.string, ".*ERROR.*")
+          - set(severity_text, "Fatal") where IsMatch(body.string, ".*FATAL.*")
 exporters:
   debug:
     verbosity: detailed
@@ -23,6 +34,7 @@ exporters:
     endpoint: localhost:4317
     headers:
       x-instana-key: instanalocal
+      x-instana-host: "yourhost.ibm.com"
     tls:
       insecure: true
 service:
@@ -32,8 +44,8 @@ service:
       processors: [batch]
       exporters: [otlp, debug]
     logs:
-      receivers: [otlp]
-      processors: [batch]
+      receivers: [otlp, filelog]
+      processors: [transform/severity_parse, batch]
       exporters: [otlp, debug]
     metrics:
       receivers: [otlp, hostmetrics]

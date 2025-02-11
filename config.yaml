@@ -54,6 +54,15 @@ service:
   telemetry:
     logs:
       level: debug
+    metrics:
+      readers:
+        - periodic:
+            exporter:
+              otlp:
+                protocol: grpc/protobuf
+                endpoint: localhost:4317
+                headers:
+                  x-instana-key: instanalocal
 #   extensions: [opamp]
 # extensions:
 #   opamp:

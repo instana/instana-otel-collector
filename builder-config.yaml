@@ -1,5 +1,6 @@
 ---
 dist:
+  module: github.com/instana/instana-otel-collector
   name: otelcol-dev
   description: Instana Distibution of OpenTelemetry Collector
   output_path: ./otelcol-dev

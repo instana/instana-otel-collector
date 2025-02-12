@@ -25,13 +25,13 @@ fi
 # Function to setup environment
 setup_environment() {
   echo "Setting up environment..."
-  go install go.opentelemetry.io/collector/cmd/builder@latest
+  GOBIN=$PWD go install go.opentelemetry.io/collector/cmd/builder@latest
 }
 
 # Function to build the collector
 build_collector() {
   echo "Building Instana Collector..."
-  builder --config builder-config.yaml
+  ./builder --config builder-config.yaml
 }
 
 # Function to package files

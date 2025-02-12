@@ -1,7 +1,9 @@
 #!/bin/bash
 
+SCRIPT_PATH=$(dirname "$(readlink -f "$0")")
+
 SERVICE_NAME="instana-collector"
-SERVICE_PATH="/opt/instana/collector/otelcol-dev"
+SERVICE_PATH="$SCRIPT_PATH/instana-otelcol"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 
 install_service() {
@@ -15,10 +17,10 @@ Description=Runme Service
 After=network.target
 
 [Service]
-ExecStart=$SERVICE_PATH --config config.yaml
+ExecStart=$SERVICE_PATH --config ../config/config.yaml
 Restart=always
 User=root
-WorkingDirectory=/opt/instana/collector
+WorkingDirectory=$SCRIPT_PATH
 
 [Install]
 WantedBy=multi-user.target

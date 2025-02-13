@@ -31,10 +31,10 @@ exporters:
   debug:
     verbosity: detailed
   otlp:
-    endpoint: localhost:4317
+    endpoint: ${env:INSTANA_ENDPOINT:-localhost:4317}
     headers:
-      x-instana-key: instanalocal
-      x-instana-host: "yourhost.ibm.com"
+      x-instana-key: ${env:INSTANA_KEY:-instanalocal}
+      x-instana-host: ${env:INSTANA_HOST:-"yourhost.ibm.com"}
     tls:
       insecure: true
 service:
@@ -60,7 +60,7 @@ service:
             exporter:
               otlp:
                 protocol: grpc/protobuf
-                endpoint: localhost:4317
+                endpoint: ${env:INSTANA_ENDPOINT:-localhost:4317}
                 headers:
                   x-instana-key: instanalocal
 #   extensions: [opamp]

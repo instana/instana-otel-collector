@@ -1,0 +1,64 @@
+name: Release via Publish
+
+on:
+  release:
+    types: published
+
+permissions:
+  contents: write
+
+jobs:
+  versioning:
+    name: Release name extraction and validation
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract-version.outputs.edition }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Extract version from branch name
+        id: extract-version
+        run: |
+          BRANCH_VERSION=$(echo "${{ github.ref }}" | sed 's/refs\/tags\///')
+          EDITION=$(echo "$BRANCH_VERSION" | sed \s/^v//'')
+          echo "Version: $BRANCH_VERSION"
+          echo "Edition: $EDITION"
+          echo "version=$BRANCH_VERSION" >> $GITHUB_OUTPUT
+          echo "edition=$EDITION" >> $GITHUB_OUTPUT
+
+      - name: Validate version format
+        id: validate-version
+        run: |
+          VERSION="${{ steps.extract-version.outputs.version }}"
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Invalid version format. Expected format: vX.Y.Z (e.g v1.2.3)"
+            exit 1
+          fi
+          echo "Version format is valid: $VERSION"
+  packaging:
+    name: Package and upload release
+    needs: versioning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Go Setup
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+
+      - name: Create Release Artifact
+        run: |
+          echo "Running packaging script for version: ${{ needs.versioning.outputs.version }}"
+          ./tools/packaging/linux/package_instana_collector.sh ${{ needs.versioning.outputs.version }}
+          ls -a
+
+      - name: Upload Generated Files
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          echo "Uploading generated files..."
+          gh release upload ${{ github.ref_name }} instana-collector-installer-v${{ needs.versioning.outputs.version }}.sh
+          echo "Uploaded installer"

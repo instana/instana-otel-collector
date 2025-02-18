@@ -4,6 +4,8 @@ receivers:
     protocols:
       grpc:
         endpoint: 0.0.0.0:24317
+      http:
+        endpoint: 0.0.0.0:4318
   filelog:
     include: ["/var/log/*.log"]
     include_file_path: true
@@ -46,7 +48,7 @@ service:
     logs:
       receivers: [otlp, filelog]
       processors: [transform/severity_parse, batch]
-      exporters: [otlp, debug]
+      exporters: [otlp]
     metrics:
       receivers: [otlp, hostmetrics]
       processors: [batch]
@@ -54,6 +56,14 @@ service:
   telemetry:
     logs:
       level: debug
+      processors:
+        - batch:
+            exporter:
+              otlp:
+                protocol: http/protobuf
+                endpoint: http://localhost:4318
+                headers:
+                  x-instana-key: ${env:INSTANA_KEY:-instanalocal}
     metrics:
       readers:
         - periodic:

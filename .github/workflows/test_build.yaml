@@ -1,0 +1,35 @@
+name: Validate Collector Build
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test_build:
+    name: Build OpenTelemetry Collector
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Go Setup
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+
+      - name: Verify Go installation
+        run: go version
+
+      - name: Set up environment
+        run: |
+          mkdir -p bin
+          curl --proto '=https' --tlsv1.2 -fL -o bin/ocb \
+          https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fbuilder%2Fv0.119.0/ocb_0.119.0_linux_amd64
+          ls -a
+          chmod +x bin/ocb
+
+      - name: Build Collector
+        run: |
+          echo "Building Collector..."
+          ./bin/ocb --config builder-config.yaml

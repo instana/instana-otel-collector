@@ -22,6 +22,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
           FIX_YAML_PRETTIER: true
           FIX_MARKDOWN_PRETTIER: true
+          FIX_SHELL_SHFMT: true
           VALIDATE_GITHUB_ACTIONS: false
           VALIDATE_CHECKOV: false
           VALIDATE_JSCPD: false

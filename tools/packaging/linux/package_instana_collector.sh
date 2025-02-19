@@ -49,7 +49,7 @@ create_installer_script() {
 	echo "Embedding tar.gz into script..."
 	BASE64_TAR=$(base64 "instana-otel-collector-release-v$VERSION.tar.gz")
 
-	cat >instana-collector-installer-v$VERSION.sh <<EOL
+	cat >instana-collector-installer-v"$VERSION".sh <<EOL
 #!/bin/bash
 
 set -e
@@ -74,7 +74,7 @@ echo "Running instana_collector_service.sh install..."
 echo "Extraction complete. Files are available at \$INSTALL_PATH."
 EOL
 
-	chmod +x instana-collector-installer-v$VERSION.sh
+	chmod +x instana-collector-installer-v"$VERSION".sh
 }
 
 # Function to clean up artifacts

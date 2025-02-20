@@ -31,7 +31,7 @@ exporters:
   debug:
     verbosity: detailed
   otlp:
-    endpoint: ${env:INSTANA_ENDPOINT:-localhost:4317}
+    endpoint: ${env:INSTANA_OTEL_ENDPOINT_GRPC:-localhost:4317}
     headers:
       x-instana-key: ${env:INSTANA_KEY:-instanalocal}
       x-instana-host: ${env:INSTANA_HOST:-"yourhost.ibm.com"}
@@ -46,7 +46,7 @@ service:
     logs:
       receivers: [otlp, filelog]
       processors: [transform/severity_parse, batch]
-      exporters: [otlp, debug]
+      exporters: [otlp]
     metrics:
       receivers: [otlp, hostmetrics]
       processors: [batch]
@@ -54,15 +54,23 @@ service:
   telemetry:
     logs:
       level: debug
+      processors:
+        - batch:
+            exporter:
+              otlp:
+                protocol: http/protobuf
+                endpoint: ${env:INSTANA_OTEL_ENDPOINT_HTTP:-http://localhost:8992}
+                headers:
+                  x-instana-key: ${env:INSTANA_KEY:-instanalocal}
     metrics:
       readers:
         - periodic:
             exporter:
               otlp:
                 protocol: grpc/protobuf
-                endpoint: ${env:INSTANA_ENDPOINT:-localhost:4317}
+                endpoint: ${env:INSTANA_OTEL_ENDPOINT_GRPC:-localhost:4317}
                 headers:
-                  x-instana-key: instanalocal
+                  x-instana-key: ${env:INSTANA_KEY:-instanalocal}
 #   extensions: [opamp]
 # extensions:
 #   opamp:

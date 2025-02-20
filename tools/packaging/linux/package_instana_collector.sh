@@ -54,19 +54,62 @@ create_installer_script() {
 
 set -e
 
-if [[ "\$1" == "-h" || "\$1" == "--help" ]]; then
-  echo "Usage: instana-collector-installer-v$VERSION.sh [install_path]"
-  echo "
-Options:"
+show_help() {
+  echo "Usage: instana-collector-installer-v$VERSION.sh -e INSTANA_ENDPOINT -a INSTANA_KEY [install_path]"
+  echo "Options:"
   echo "  -h, --help    Show this help message and exit"
+  echo "  -e ENDPOINT   Set the Instana endpoint (required)"
+  echo "  -a KEY        Set the Instana key (required)"
   exit 0
+}
+
+if [[ "\$1" == "-h" || "\$1" == "--help" ]]; then
+  show_help
 fi
 
-INSTALL_PATH=\${1:-/opt/instana}
+# Default values
+INSTALL_PATH="/opt/instana"
+INSTANA_ENDPOINT=""
+INSTANA_KEY=""
+
+# Parse arguments
+while getopts "he:a:" opt; do
+  case \${opt} in
+    h )
+      show_help
+      ;;
+    e )
+      INSTANA_ENDPOINT="\$OPTARG"
+      ;;
+    a )
+      INSTANA_KEY="\$OPTARG"
+      ;;
+    \? )
+      show_help
+      ;;
+  esac
+done
+shift \$((OPTIND -1))
+
+if [[ -z "\$INSTANA_ENDPOINT" || -z "\$INSTANA_KEY" ]]; then
+  echo "Error: Both -e (INSTANA_ENDPOINT) and -a (INSTANA_KEY) are required."
+  show_help
+fi
+
+if [[ -n "\$1" ]]; then
+  INSTALL_PATH="\$1"
+fi
+
 echo "Extracting package to \$INSTALL_PATH..."
 mkdir -p "\$INSTALL_PATH"
 echo "$BASE64_TAR" | base64 --decode > "\$INSTALL_PATH/instana-otel-collector-release-v$VERSION.tar.gz"
 tar -xzvf "\$INSTALL_PATH/instana-otel-collector-release-v$VERSION.tar.gz" -C "\$INSTALL_PATH"
+
+echo "Creating config.env file..."
+echo "INSTANA_ENDPOINT=\$INSTANA_ENDPOINT" > "\$INSTALL_PATH/collector/config/config.env"
+echo "INSTANA_KEY=\$INSTANA_KEY" >> "\$INSTALL_PATH/collector/config/config.env"
+
+chmod 600 "\$INSTALL_PATH/collector/config/config.env"
 
 echo "Running instana_collector_service.sh install..."
 "\$INSTALL_PATH/collector/bin/instana_collector_service.sh" install

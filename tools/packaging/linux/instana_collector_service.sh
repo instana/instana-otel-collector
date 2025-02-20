@@ -1,9 +1,9 @@
 #!/bin/bash
 
-SCRIPT_PATH=$(dirname "$(readlink -f "$0")")
+SCRIPT_PATH=$(readlink -f $(dirname "$0")/..)
 
 SERVICE_NAME="instana-collector"
-SERVICE_PATH="$SCRIPT_PATH/instana-otelcol"
+SERVICE_PATH="$SCRIPT_PATH/bin/instana-otelcol"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 
 install_service() {
@@ -13,11 +13,12 @@ install_service() {
 	# Create the systemd service file
 	cat <<EOF | sudo tee "$SERVICE_FILE"
 [Unit]
-Description=Runme Service
+Description=Instana Collector Service
 After=network.target
 
 [Service]
-ExecStart=$SERVICE_PATH --config ../config/config.yaml
+ExecStart=$SERVICE_PATH --config config/config.yaml
+EnvironmentFile=$SCRIPT_PATH/config/config.env
 Restart=always
 User=root
 WorkingDirectory=$SCRIPT_PATH
@@ -50,7 +51,7 @@ uninstall_service() {
 
 status_service() {
 	# Check the status of the service
-	sudo systemctl status "$SERVICE_NAME" --no-pager
+	sudo systemctl status -l "$SERVICE_NAME" --no-pager
 }
 
 start_service() {

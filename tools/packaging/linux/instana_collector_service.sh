@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_PATH=$(readlink -f $(dirname "$0")/..)
+SCRIPT_PATH=$(readlink -f "$(dirname "$0")"/..)
 
 SERVICE_NAME="instana-collector"
 SERVICE_PATH="$SCRIPT_PATH/bin/instana-otelcol"

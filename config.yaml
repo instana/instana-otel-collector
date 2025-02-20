@@ -4,8 +4,6 @@ receivers:
     protocols:
       grpc:
         endpoint: 0.0.0.0:24317
-      http:
-        endpoint: 0.0.0.0:4318
   filelog:
     include: ["/var/log/*.log"]
     include_file_path: true
@@ -33,7 +31,7 @@ exporters:
   debug:
     verbosity: detailed
   otlp:
-    endpoint: ${env:INSTANA_ENDPOINT:-localhost:4317}
+    endpoint: ${env:INSTANA_OTEL_ENDPOINT_GRPC:-localhost:4317}
     headers:
       x-instana-key: ${env:INSTANA_KEY:-instanalocal}
       x-instana-host: ${env:INSTANA_HOST:-"yourhost.ibm.com"}
@@ -61,7 +59,7 @@ service:
             exporter:
               otlp:
                 protocol: http/protobuf
-                endpoint: http://localhost:4318
+                endpoint: ${env:INSTANA_OTEL_ENDPOINT_HTTP:-http://localhost:8992}
                 headers:
                   x-instana-key: ${env:INSTANA_KEY:-instanalocal}
     metrics:
@@ -70,9 +68,9 @@ service:
             exporter:
               otlp:
                 protocol: grpc/protobuf
-                endpoint: ${env:INSTANA_ENDPOINT:-localhost:4317}
+                endpoint: ${env:INSTANA_OTEL_ENDPOINT_GRPC:-localhost:4317}
                 headers:
-                  x-instana-key: instanalocal
+                  x-instana-key: ${env:INSTANA_KEY:-instanalocal}
 #   extensions: [opamp]
 # extensions:
 #   opamp:

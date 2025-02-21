@@ -4,15 +4,15 @@ set -e
 
 # Function to display help message
 show_help() {
-    echo "Usage: uninstall.sh"
-    echo "Options:"
-    echo "  -h, --help    Show this help message and exit"
-    exit 0
+	echo "Usage: uninstall.sh"
+	echo "Options:"
+	echo "  -h, --help    Show this help message and exit"
+	exit 0
 }
 
 # Check if the user requested help
 if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-    show_help
+	show_help
 fi
 
 # Determine the installation path based on the script's location
@@ -22,14 +22,14 @@ INSTALL_PATH=$(readlink -f "$INSTALL_PATH")
 
 # Verify if the Instana Collector is installed
 if [[ ! -d "$INSTALL_PATH/collector" ]]; then
-    echo "Error: Instana Collector not found in $INSTALL_PATH."
-    exit 1
+	echo "Error: Instana Collector not found in $INSTALL_PATH."
+	exit 1
 fi
 
 # Stop and remove the Instana Collector service if it exists
 if [[ -f "$INSTALL_PATH/collector/bin/instana_collector_service.sh" ]]; then
-    echo "Stopping and removing Instana Collector service..."
-    "$INSTALL_PATH/collector/bin/instana_collector_service.sh" uninstall || true
+	echo "Stopping and removing Instana Collector service..."
+	"$INSTALL_PATH/collector/bin/instana_collector_service.sh" uninstall || true
 fi
 
 # Remove the Instana Collector installation directory

@@ -3,6 +3,8 @@ name: Linting and Fix Issues
 on:
   pull_request:
     branches: [main]
+    paths-ignore:
+      - 'testbed/**'
   workflow_dispatch:
 permissions:
   contents: write
@@ -10,7 +12,6 @@ permissions:
 jobs:
   fix-lint-issues:
     runs-on: ubuntu-latest
-    if: github.head_ref != 'testbed'
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4

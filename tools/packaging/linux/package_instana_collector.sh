@@ -56,7 +56,7 @@ create_installer_script() {
 set -e
 
 show_help() {
-  echo "Usage: instana-collector-installer-v$VERSION.sh -e INSTANA_OTEL_ENDPOINT_GRPC -a INSTANA_KEY [install_path]"
+  echo "Usage: instana-collector-installer-v$VERSION.sh -e INSTANA_OTEL_ENDPOINT_GRPC [-H INSTANA_OTEL_ENDPOINT_HTTP] -a INSTANA_KEY [install_path]"
   echo "Options:"
   echo "  -h, --help         Show this help message and exit"
   echo "  -e gRPC ENDPOINT   Set the Instana OTel gRPC endpoint (required)"

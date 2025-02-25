@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
     paths-ignore:
-      - 'testbed/**'
+      - "testbed/**"
   workflow_dispatch:
 permissions:
   contents: write

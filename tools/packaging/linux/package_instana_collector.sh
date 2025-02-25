@@ -40,7 +40,7 @@ package_files() {
 	mkdir -p collector/bin collector/config
 	cp config.yaml collector/config
 	cp tools/packaging/linux/instana_collector_service.sh collector/bin
-        cp tools/packaging/linux/uninstall.sh collector/bin
+	cp tools/packaging/linux/uninstall.sh collector/bin
 	mv otelcol-dev/otelcol-dev collector/bin/instana-otelcol
 	tar -czvf "instana-otel-collector-release-v$VERSION.tar.gz" collector
 }

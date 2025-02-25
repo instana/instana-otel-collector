@@ -23,7 +23,7 @@ RUN_TESTBED=1 go test -v ${TEST_ARGS} 2>&1 | tee results/testoutput.log | bash -
 
 testStatus=${PIPESTATUS[0]}
 
-${GOJUNITREPORTCMD} <results/testoutput.log >results/junit/results.xml
+${GOJUNITREPORTCMD} < results/testoutput.log > results/junit/results.xml
 
 bash -c "cat results/TESTRESULTS.md | ${TEST_COLORIZE}"
 

@@ -22,6 +22,7 @@ jobs:
         uses: super-linter/super-linter@latest
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          FILTER_REGEX_EXCLUDE: .*testbed/*
           FIX_YAML_PRETTIER: true
           FIX_MARKDOWN_PRETTIER: true
           FIX_SHELL_SHFMT: true

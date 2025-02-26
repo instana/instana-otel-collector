@@ -42,7 +42,7 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlp, debug]
+      exporters: [otlp]
     logs:
       receivers: [otlp, filelog]
       processors: [transform/severity_parse, batch]
@@ -50,32 +50,14 @@ service:
     metrics:
       receivers: [otlp, hostmetrics]
       processors: [batch]
-      exporters: [otlp, debug]
+      exporters: [otlp]
   telemetry:
-    logs:
-      level: debug
-      processors:
-        - batch:
-            exporter:
-              otlp:
-                protocol: http/protobuf
-                endpoint: ${env:INSTANA_OTEL_ENDPOINT_HTTP:-http://localhost:8992}
-                headers:
-                  x-instana-key: ${env:INSTANA_KEY:-instanalocal}
     metrics:
       readers:
         - periodic:
             exporter:
               otlp:
                 protocol: http/protobuf
-                endpoint: ${env:INSTANA_OTEL_ENDPOINT_GRPC:-localhost:4317}
+                endpoint: ${env:INSTANA_OTEL_ENDPOINT_GRPC:-localhost:8992}
                 headers:
                   x-instana-key: ${env:INSTANA_KEY:-instanalocal}
-#   extensions: [opamp]
-# extensions:
-#   opamp:
-#     server:
-#       ws:
-#         endpoint: ws://127.0.0.1:4320/v1/opamp
-#         tls:
-#           insecure_skip_verify: true

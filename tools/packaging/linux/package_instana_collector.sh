@@ -25,7 +25,7 @@ fi
 # Function to setup environment
 setup_environment() {
 	echo "Setting up environment..."
-	GOBIN=$PWD go install go.opentelemetry.io/collector/cmd/builder@v0.119.0
+	GOBIN=$PWD go install go.opentelemetry.io/collector/cmd/builder@v0.118.0
 }
 
 # Function to build the collector

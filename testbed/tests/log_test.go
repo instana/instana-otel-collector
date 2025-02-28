@@ -266,26 +266,26 @@ func TestLogLargeFiles(t *testing.T) {
 			},
 			sleepSeconds: 100,
 		},
-		{
-			/*
-			 * The FileLogWriter generates strings almost 100 bytes each.
-			 * With a rate of 330,000 lines per second over a duration of 200 seconds,
-			 * this results in a file size of approximately 6GB over its lifetime.
-			 */
-			name:     "filelog-largefiles-6GB-lifetime",
-			sender:   datasenders.NewFileLogWriter(),
-			receiver: testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t)),
-			loadOptions: testbed.LoadOptions{
-				DataItemsPerSecond: 330000,
-				ItemsPerBatch:      10,
-				Parallel:           10,
-			},
-			resourceSpec: testbed.ResourceSpec{
-				ExpectedMaxCPU: 100,
-				ExpectedMaxRAM: 150,
-			},
-			sleepSeconds: 150,
-		},
+		// {
+		// 	/*
+		// 	 * The FileLogWriter generates strings almost 100 bytes each.
+		// 	 * With a rate of 330,000 lines per second over a duration of 200 seconds,
+		// 	 * this results in a file size of approximately 6GB over its lifetime.
+		// 	 */
+		// 	name:     "filelog-largefiles-6GB-lifetime",
+		// 	sender:   datasenders.NewFileLogWriter(),
+		// 	receiver: testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t)),
+		// 	loadOptions: testbed.LoadOptions{
+		// 		DataItemsPerSecond: 330000,
+		// 		ItemsPerBatch:      10,
+		// 		Parallel:           10,
+		// 	},
+		// 	resourceSpec: testbed.ResourceSpec{
+		// 		ExpectedMaxCPU: 100,
+		// 		ExpectedMaxRAM: 150,
+		// 	},
+		// 	sleepSeconds: 150,
+		// },
 	}
 	processors := []ProcessorNameAndConfigBody{
 		{

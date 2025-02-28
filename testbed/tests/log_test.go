@@ -284,7 +284,7 @@ func TestLogLargeFiles(t *testing.T) {
 				ExpectedMaxCPU: 100,
 				ExpectedMaxRAM: 150,
 			},
-			sleepSeconds: 200,
+			sleepSeconds: 150,
 		},
 	}
 	processors := []ProcessorNameAndConfigBody{

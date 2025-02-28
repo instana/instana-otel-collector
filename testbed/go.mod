@@ -11,7 +11,6 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/opencensusexporter v0.120.1
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusexporter v0.120.1
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/sapmexporter v0.120.1
-	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/signalfxexporter v0.120.1
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/syslogexporter v0.120.1
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/zipkinexporter v0.120.1
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/common v0.120.1
@@ -223,7 +222,6 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/sharedcomponent v0.120.1 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/splunk v0.120.1 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/batchperresourceattr v0.120.1 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/experimentalmetricmetadata v0.120.1 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/ottl v0.120.1 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.120.1 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/resourcetotelemetry v0.120.1 // indirect

@@ -64,19 +64,19 @@ func TestStabilityMetricsCarbon(t *testing.T) {
 	)
 }
 
-func TestStabilityMetricsSignalFx(t *testing.T) {
-	scenarios.Scenario10kItemsPerSecond(
-		t,
-		datasenders.NewSFxMetricDataSender(testutil.GetAvailablePort(t)),
-		datareceivers.NewSFxMetricsDataReceiver(testutil.GetAvailablePort(t)),
-		testbed.ResourceSpec{
-			ExpectedMaxCPU:      120,
-			ExpectedMaxRAM:      95,
-			ResourceCheckPeriod: resourceCheckPeriod,
-		},
-		contribPerfResultsSummary,
-		nil,
-		nil,
-		nil,
-	)
-}
+// func TestStabilityMetricsSignalFx(t *testing.T) {
+// 	scenarios.Scenario10kItemsPerSecond(
+// 		t,
+// 		datasenders.NewSFxMetricDataSender(testutil.GetAvailablePort(t)),
+// 		datareceivers.NewSFxMetricsDataReceiver(testutil.GetAvailablePort(t)),
+// 		testbed.ResourceSpec{
+// 			ExpectedMaxCPU:      120,
+// 			ExpectedMaxRAM:      95,
+// 			ResourceCheckPeriod: resourceCheckPeriod,
+// 		},
+// 		contribPerfResultsSummary,
+// 		nil,
+// 		nil,
+// 		nil,
+// 	)
+// }

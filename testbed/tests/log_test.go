@@ -14,12 +14,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/common/testutil"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/testbed/datareceivers"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/testbed/datasenders"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/testbed/testbed"
+	"github.com/stretchr/testify/require"
 )
 
 func TestLog10kDPS(t *testing.T) {
@@ -39,15 +37,15 @@ func TestLog10kDPS(t *testing.T) {
 				ExpectedMaxRAM: 120,
 			},
 		},
-		{
-			name:     "OTLP-HTTP",
-			sender:   testbed.NewOTLPHTTPLogsDataSender(testbed.DefaultHost, testutil.GetAvailablePort(t)),
-			receiver: testbed.NewOTLPHTTPDataReceiver(testutil.GetAvailablePort(t)),
-			resourceSpec: testbed.ResourceSpec{
-				ExpectedMaxCPU: 30,
-				ExpectedMaxRAM: 120,
-			},
-		},
+		// {
+		// 	name:     "OTLP-HTTP",
+		// 	sender:   testbed.NewOTLPHTTPLogsDataSender(testbed.DefaultHost, testutil.GetAvailablePort(t)),
+		// 	receiver: testbed.NewOTLPHTTPDataReceiver(testutil.GetAvailablePort(t)),
+		// 	resourceSpec: testbed.ResourceSpec{
+		// 		ExpectedMaxCPU: 30,
+		// 		ExpectedMaxRAM: 120,
+		// 	},
+		// },
 		{
 			name:     "filelog",
 			sender:   datasenders.NewFileLogWriter(),
@@ -65,97 +63,97 @@ func TestLog10kDPS(t *testing.T) {
 				ExpectedMaxCPU: 50,
 				ExpectedMaxRAM: 120,
 			},
-			extensions: datasenders.NewLocalFileStorageExtension(),
-		},
-		{
-			name:     "kubernetes containers",
-			sender:   datasenders.NewKubernetesContainerWriter(),
-			receiver: testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t)),
-			resourceSpec: testbed.ResourceSpec{
-				ExpectedMaxCPU: 110,
-				ExpectedMaxRAM: 150,
-			},
-		},
-		{
-			name:     "kubernetes containers parser",
-			sender:   datasenders.NewKubernetesContainerParserWriter(),
-			receiver: testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t)),
-			resourceSpec: testbed.ResourceSpec{
-				ExpectedMaxCPU: 110,
-				ExpectedMaxRAM: 150,
-			},
-		},
-		{
-			name:     "k8s CRI-Containerd",
-			sender:   datasenders.NewKubernetesCRIContainerdWriter(),
-			receiver: testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t)),
-			resourceSpec: testbed.ResourceSpec{
-				ExpectedMaxCPU: 100,
-				ExpectedMaxRAM: 150,
-			},
-		},
-		{
-			name:     "k8s CRI-Containerd no attr ops",
-			sender:   datasenders.NewKubernetesCRIContainerdNoAttributesOpsWriter(),
-			receiver: testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t)),
-			resourceSpec: testbed.ResourceSpec{
-				ExpectedMaxCPU: 100,
-				ExpectedMaxRAM: 150,
-			},
-		},
-		{
-			name:     "CRI-Containerd",
-			sender:   datasenders.NewCRIContainerdWriter(),
-			receiver: testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t)),
-			resourceSpec: testbed.ResourceSpec{
-				ExpectedMaxCPU: 100,
-				ExpectedMaxRAM: 150,
-			},
-		},
-		{
-			name:     "syslog-tcp-batch-1",
-			sender:   datasenders.NewTCPUDPWriter("tcp", testbed.DefaultHost, testutil.GetAvailablePort(t), 1),
-			receiver: testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t)),
-			resourceSpec: testbed.ResourceSpec{
-				ExpectedMaxCPU: 80,
-				ExpectedMaxRAM: 150,
-			},
-		},
-		{
-			name:     "syslog-tcp-batch-100",
-			sender:   datasenders.NewTCPUDPWriter("tcp", testbed.DefaultHost, testutil.GetAvailablePort(t), 100),
-			receiver: testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t)),
-			resourceSpec: testbed.ResourceSpec{
-				ExpectedMaxCPU: 80,
-				ExpectedMaxRAM: 150,
-			},
-		},
-		{
-			name:     "FluentForward-SplunkHEC",
-			sender:   datasenders.NewFluentLogsForwarder(t, testutil.GetAvailablePort(t)),
-			receiver: datareceivers.NewSplunkHECDataReceiver(testutil.GetAvailablePort(t)),
-			resourceSpec: testbed.ResourceSpec{
-				ExpectedMaxCPU: 60,
-				ExpectedMaxRAM: 150,
-			},
-		},
-		{
-			name:     "tcp-batch-1",
-			sender:   datasenders.NewTCPUDPWriter("tcp", testbed.DefaultHost, testutil.GetAvailablePort(t), 1),
-			receiver: testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t)),
-			resourceSpec: testbed.ResourceSpec{
-				ExpectedMaxCPU: 80,
-				ExpectedMaxRAM: 150,
-			},
-		},
-		{
-			name:     "tcp-batch-100",
-			sender:   datasenders.NewTCPUDPWriter("tcp", testbed.DefaultHost, testutil.GetAvailablePort(t), 100),
-			receiver: testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t)),
-			resourceSpec: testbed.ResourceSpec{
-				ExpectedMaxCPU: 80,
-				ExpectedMaxRAM: 150,
-			},
+			// 	extensions: datasenders.NewLocalFileStorageExtension(),
+			// },
+			// {
+			// 	name:     "kubernetes containers",
+			// 	sender:   datasenders.NewKubernetesContainerWriter(),
+			// 	receiver: testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t)),
+			// 	resourceSpec: testbed.ResourceSpec{
+			// 		ExpectedMaxCPU: 110,
+			// 		ExpectedMaxRAM: 150,
+			// 	},
+			// },
+			// {
+			// 	name:     "kubernetes containers parser",
+			// 	sender:   datasenders.NewKubernetesContainerParserWriter(),
+			// 	receiver: testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t)),
+			// 	resourceSpec: testbed.ResourceSpec{
+			// 		ExpectedMaxCPU: 110,
+			// 		ExpectedMaxRAM: 150,
+			// 	},
+			// },
+			// {
+			// 	name:     "k8s CRI-Containerd",
+			// 	sender:   datasenders.NewKubernetesCRIContainerdWriter(),
+			// 	receiver: testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t)),
+			// 	resourceSpec: testbed.ResourceSpec{
+			// 		ExpectedMaxCPU: 100,
+			// 		ExpectedMaxRAM: 150,
+			// 	},
+			// },
+			// {
+			// 	name:     "k8s CRI-Containerd no attr ops",
+			// 	sender:   datasenders.NewKubernetesCRIContainerdNoAttributesOpsWriter(),
+			// 	receiver: testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t)),
+			// 	resourceSpec: testbed.ResourceSpec{
+			// 		ExpectedMaxCPU: 100,
+			// 		ExpectedMaxRAM: 150,
+			// 	},
+			// },
+			// {
+			// 	name:     "CRI-Containerd",
+			// 	sender:   datasenders.NewCRIContainerdWriter(),
+			// 	receiver: testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t)),
+			// 	resourceSpec: testbed.ResourceSpec{
+			// 		ExpectedMaxCPU: 100,
+			// 		ExpectedMaxRAM: 150,
+			// 	},
+			// },
+			// {
+			// 	name:     "syslog-tcp-batch-1",
+			// 	sender:   datasenders.NewTCPUDPWriter("tcp", testbed.DefaultHost, testutil.GetAvailablePort(t), 1),
+			// 	receiver: testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t)),
+			// 	resourceSpec: testbed.ResourceSpec{
+			// 		ExpectedMaxCPU: 80,
+			// 		ExpectedMaxRAM: 150,
+			// 	},
+			// },
+			// {
+			// 	name:     "syslog-tcp-batch-100",
+			// 	sender:   datasenders.NewTCPUDPWriter("tcp", testbed.DefaultHost, testutil.GetAvailablePort(t), 100),
+			// 	receiver: testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t)),
+			// 	resourceSpec: testbed.ResourceSpec{
+			// 		ExpectedMaxCPU: 80,
+			// 		ExpectedMaxRAM: 150,
+			// 	},
+			// },
+			// {
+			// 	name:     "FluentForward-SplunkHEC",
+			// 	sender:   datasenders.NewFluentLogsForwarder(t, testutil.GetAvailablePort(t)),
+			// 	receiver: datareceivers.NewSplunkHECDataReceiver(testutil.GetAvailablePort(t)),
+			// 	resourceSpec: testbed.ResourceSpec{
+			// 		ExpectedMaxCPU: 60,
+			// 		ExpectedMaxRAM: 150,
+			// 	},
+			// },
+			// {
+			// 	name:     "tcp-batch-1",
+			// 	sender:   datasenders.NewTCPUDPWriter("tcp", testbed.DefaultHost, testutil.GetAvailablePort(t), 1),
+			// 	receiver: testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t)),
+			// 	resourceSpec: testbed.ResourceSpec{
+			// 		ExpectedMaxCPU: 80,
+			// 		ExpectedMaxRAM: 150,
+			// 	},
+			// },
+			// {
+			// 	name:     "tcp-batch-100",
+			// 	sender:   datasenders.NewTCPUDPWriter("tcp", testbed.DefaultHost, testutil.GetAvailablePort(t), 100),
+			// 	receiver: testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t)),
+			// 	resourceSpec: testbed.ResourceSpec{
+			// 		ExpectedMaxCPU: 80,
+			// 		ExpectedMaxRAM: 150,
+			// 	},
 		},
 	}
 

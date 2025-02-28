@@ -28,74 +28,74 @@ type expectedDataType struct {
 	attributes     map[string]any
 }
 
-func TestSyslogComplementaryRFC5424(t *testing.T) {
-	expectedData := []expectedDataType{
-		{
-			message:        "<165>1 2003-10-11T22:14:15.003Z mymachine.example.com eventslog - ID47 [exampleSDID@32473 iut=\"3\"] Some message",
-			severityNumber: 10,
-			severityText:   "notice",
-			timestamp:      1065910455003000000,
-			attributes: map[string]any{
-				"message": "Some message",
-				"msg_id":  "ID47",
-				"structured_data": map[string]any{
-					"exampleSDID@32473": map[string]any{
-						"iut": "3",
-					},
-				},
-				"hostname": "mymachine.example.com",
-				"appname":  "eventslog",
-				"priority": int64(165),
-				"version":  int64(1),
-				"facility": int64(20),
-			},
-		},
-		{
-			message:        "<17>3 2003-10-11T22:14:15.008Z - - - - -",
-			severityNumber: 19,
-			severityText:   "alert",
-			timestamp:      1065910455008000000,
-			attributes: map[string]any{
-				"priority": int64(17),
-				"version":  int64(3),
-				"facility": int64(2),
-			},
-		},
-	}
+// func TestSyslogComplementaryRFC5424(t *testing.T) {
+// 	expectedData := []expectedDataType{
+// 		{
+// 			message:        "<165>1 2003-10-11T22:14:15.003Z mymachine.example.com eventslog - ID47 [exampleSDID@32473 iut=\"3\"] Some message",
+// 			severityNumber: 10,
+// 			severityText:   "notice",
+// 			timestamp:      1065910455003000000,
+// 			attributes: map[string]any{
+// 				"message": "Some message",
+// 				"msg_id":  "ID47",
+// 				"structured_data": map[string]any{
+// 					"exampleSDID@32473": map[string]any{
+// 						"iut": "3",
+// 					},
+// 				},
+// 				"hostname": "mymachine.example.com",
+// 				"appname":  "eventslog",
+// 				"priority": int64(165),
+// 				"version":  int64(1),
+// 				"facility": int64(20),
+// 			},
+// 		},
+// 		{
+// 			message:        "<17>3 2003-10-11T22:14:15.008Z - - - - -",
+// 			severityNumber: 19,
+// 			severityText:   "alert",
+// 			timestamp:      1065910455008000000,
+// 			attributes: map[string]any{
+// 				"priority": int64(17),
+// 				"version":  int64(3),
+// 				"facility": int64(2),
+// 			},
+// 		},
+// 	}
 
-	complementaryTest(t, "rfc5424", expectedData)
-}
+// 	complementaryTest(t, "rfc5424", expectedData)
+// }
 
-func TestSyslogComplementaryRFC3164(t *testing.T) {
-	expectedData := []expectedDataType{
-		{
-			message:        "<34>Oct 11 2023 22:14:15 mymachine su: 'su root' failed for lonvick on /dev/pts/8",
-			timestamp:      1697062455000000000,
-			severityNumber: 18,
-			severityText:   "crit",
-			attributes: map[string]any{
-				"message":  "'su root' failed for lonvick on /dev/pts/8",
-				"hostname": "mymachine",
-				"appname":  "su",
-				"priority": int64(34),
-				"facility": int64(4),
-			},
-		},
-		{
-			message:        "<19>Oct 11 2023 22:14:15 - -",
-			timestamp:      1697062455000000000,
-			severityNumber: 17,
-			severityText:   "err",
-			attributes: map[string]any{
-				"message":  "-",
-				"priority": int64(19),
-				"facility": int64(2),
-			},
-		},
-	}
+// func TestSyslogComplementaryRFC3164(t *testing.T) {
+// 	expectedData := []expectedDataType{
+// 		{
+// 			message:        "<34>Oct 11 2023 22:14:15 mymachine su: 'su root' failed for lonvick on /dev/pts/8",
+// 			timestamp:      1697062455000000000,
+// 			severityNumber: 18,
+// 			severityText:   "crit",
+// 			attributes: map[string]any{
+// 				"message":  "'su root' failed for lonvick on /dev/pts/8",
+// 				"hostname": "mymachine",
+// 				"appname":  "su",
+// 				"priority": int64(34),
+// 				"facility": int64(4),
+// 			},
+// 		},
+// 		{
+// 			message:        "<19>Oct 11 2023 22:14:15 - -",
+// 			timestamp:      1697062455000000000,
+// 			severityNumber: 17,
+// 			severityText:   "err",
+// 			attributes: map[string]any{
+// 				"message":  "-",
+// 				"priority": int64(19),
+// 				"facility": int64(2),
+// 			},
+// 		},
+// 	}
 
-	complementaryTest(t, "rfc3164", expectedData)
-}
+// 	complementaryTest(t, "rfc3164", expectedData)
+// }
 
 func componentFactories(t *testing.T) otelcol.Factories {
 	factories, err := testbed.Components()

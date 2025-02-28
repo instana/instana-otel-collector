@@ -67,8 +67,8 @@ service:
         - periodic:
             exporter:
               otlp:
-                protocol: grpc/protobuf
-                endpoint: ${env:INSTANA_OTEL_ENDPOINT_GRPC:-localhost:4317}
+                protocol: http/protobuf
+                endpoint: ${env:INSTANA_OTEL_ENDPOINT_HTTP:-http://localhost:8992}
                 headers:
                   x-instana-key: ${env:INSTANA_KEY:-instanalocal}
 #   extensions: [opamp]

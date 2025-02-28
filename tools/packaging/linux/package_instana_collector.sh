@@ -25,7 +25,7 @@ fi
 # Function to setup environment
 setup_environment() {
 	echo "Setting up environment..."
-	GOBIN=$PWD go install go.opentelemetry.io/collector/cmd/builder@v0.119.0
+	GOBIN=$PWD go install go.opentelemetry.io/collector/cmd/builder@v0.118.0
 }
 
 # Function to build the collector
@@ -40,6 +40,7 @@ package_files() {
 	mkdir -p collector/bin collector/config
 	cp config.yaml collector/config
 	cp tools/packaging/linux/instana_collector_service.sh collector/bin
+	cp tools/packaging/linux/uninstall.sh collector/bin
 	mv otelcol-dev/otelcol-dev collector/bin/instana-otelcol
 	tar -czvf "instana-otel-collector-release-v$VERSION.tar.gz" collector
 }
@@ -55,11 +56,12 @@ create_installer_script() {
 set -e
 
 show_help() {
-  echo "Usage: instana-collector-installer-v$VERSION.sh -e INSTANA_ENDPOINT -a INSTANA_KEY [install_path]"
+  echo "Usage: instana-collector-installer-v$VERSION.sh -e INSTANA_OTEL_ENDPOINT_GRPC [-H INSTANA_OTEL_ENDPOINT_HTTP] -a INSTANA_KEY [install_path]"
   echo "Options:"
-  echo "  -h, --help    Show this help message and exit"
-  echo "  -e ENDPOINT   Set the Instana endpoint (required)"
-  echo "  -a KEY        Set the Instana key (required)"
+  echo "  -h, --help         Show this help message and exit"
+  echo "  -e gRPC ENDPOINT   Set the Instana OTel gRPC endpoint (required)"
+  echo "  -H HTTP ENDPOINT   Set the Instana OTel HTTP endpoint"
+  echo "  -a KEY             Set the Instana key (required)"
   exit 0
 }
 
@@ -69,17 +71,21 @@ fi
 
 # Default values
 INSTALL_PATH="/opt/instana"
-INSTANA_ENDPOINT=""
+INSTANA_OTEL_ENDPOINT_GRPC=""
+INSTANA_OTEL_ENDPOINT_HTTP=""
 INSTANA_KEY=""
 
 # Parse arguments
-while getopts "he:a:" opt; do
+while getopts "he:H:a:" opt; do
   case \${opt} in
     h )
       show_help
       ;;
     e )
-      INSTANA_ENDPOINT="\$OPTARG"
+      INSTANA_OTEL_ENDPOINT_GRPC="\$OPTARG"
+      ;;
+    H )
+      INSTANA_OTEL_ENDPOINT_HTTP="\$OPTARG"
       ;;
     a )
       INSTANA_KEY="\$OPTARG"
@@ -91,9 +97,14 @@ while getopts "he:a:" opt; do
 done
 shift \$((OPTIND -1))
 
-if [[ -z "\$INSTANA_ENDPOINT" || -z "\$INSTANA_KEY" ]]; then
-  echo "Error: Both -e (INSTANA_ENDPOINT) and -a (INSTANA_KEY) are required."
+if [[ -z "\$INSTANA_OTEL_ENDPOINT_GRPC" || -z "\$INSTANA_KEY" ]]; then
+  echo "Error: Both -e (INSTANA_OTEL_ENDPOINT_GRPC) and -a (INSTANA_KEY) are required."
   show_help
+fi
+
+# Derive INSTANA_OTEL_ENDPOINT_HTTP if not set
+if [[ -z "\$INSTANA_OTEL_ENDPOINT_HTTP" ]]; then
+  INSTANA_OTEL_ENDPOINT_HTTP="\$(echo "\$INSTANA_OTEL_ENDPOINT_GRPC" | sed -E 's/:[0-9]+//g'):4318"
 fi
 
 if [[ -n "\$1" ]]; then
@@ -105,8 +116,12 @@ mkdir -p "\$INSTALL_PATH"
 echo "$BASE64_TAR" | base64 --decode > "\$INSTALL_PATH/instana-otel-collector-release-v$VERSION.tar.gz"
 tar -xzvf "\$INSTALL_PATH/instana-otel-collector-release-v$VERSION.tar.gz" -C "\$INSTALL_PATH"
 
+# Delete the package tar.gz file after extraction
+rm -f "\$INSTALL_PATH/instana-otel-collector-release-v$VERSION.tar.gz"
+
 echo "Creating config.env file..."
-echo "INSTANA_ENDPOINT=\$INSTANA_ENDPOINT" > "\$INSTALL_PATH/collector/config/config.env"
+echo "INSTANA_OTEL_ENDPOINT_GRPC=\$INSTANA_OTEL_ENDPOINT_GRPC" > "\$INSTALL_PATH/collector/config/config.env"
+echo "INSTANA_OTEL_ENDPOINT_HTTP=\$INSTANA_OTEL_ENDPOINT_HTTP" >> "\$INSTALL_PATH/collector/config/config.env"
 echo "INSTANA_KEY=\$INSTANA_KEY" >> "\$INSTALL_PATH/collector/config/config.env"
 
 chmod 600 "\$INSTALL_PATH/collector/config/config.env"

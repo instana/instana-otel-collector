@@ -76,7 +76,7 @@ INSTANA_OTEL_ENDPOINT_HTTP=""
 INSTANA_KEY=""
 
 # Parse arguments
-while getopts "he:a:" opt; do
+while getopts "he:H:a:" opt; do
   case \${opt} in
     h )
       show_help
@@ -104,7 +104,7 @@ fi
 
 # Derive INSTANA_OTEL_ENDPOINT_HTTP if not set
 if [[ -z "\$INSTANA_OTEL_ENDPOINT_HTTP" ]]; then
-  INSTANA_OTEL_ENDPOINT_HTTP="http://\$(echo "\$INSTANA_OTEL_ENDPOINT_GRPC" | sed -E 's/:[0-9]+//g'):4318"
+  INSTANA_OTEL_ENDPOINT_HTTP="\$(echo "\$INSTANA_OTEL_ENDPOINT_GRPC" | sed -E 's/:[0-9]+//g'):4318"
 fi
 
 if [[ -n "\$1" ]]; then

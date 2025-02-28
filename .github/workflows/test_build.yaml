@@ -1,4 +1,4 @@
-name: Validate Collector Build
+name: Run End to End Tests
 
 on:
   pull_request:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   test_build:
-    name: Build OpenTelemetry Collector
+    name: Run End to End Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -21,15 +21,5 @@ jobs:
       - name: Verify Go installation
         run: go version
 
-      - name: Set up environment
-        run: |
-          mkdir -p bin
-          curl --proto '=https' --tlsv1.2 -fL -o bin/ocb \
-          https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fbuilder%2Fv0.119.0/ocb_0.119.0_linux_amd64
-          ls -a
-          chmod +x bin/ocb
-
-      - name: Build Collector
-        run: |
-          echo "Building Collector..."
-          ./bin/ocb --config builder-config.yaml
+      - name: Run the testbed
+        run: make e2e-test

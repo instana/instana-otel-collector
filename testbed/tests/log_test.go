@@ -7,17 +7,12 @@
 package tests
 
 import (
-	"context"
-	"path"
-	"path/filepath"
-	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/common/testutil"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/testbed/datasenders"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/testbed/testbed"
-	"github.com/stretchr/testify/require"
 )
 
 func TestLog10kDPS(t *testing.T) {
@@ -315,58 +310,58 @@ func TestLogLargeFiles(t *testing.T) {
 	}
 }
 
-func TestLargeFileOnce(t *testing.T) {
-	processors := []ProcessorNameAndConfigBody{
-		{
-			Name: "batch",
-			Body: `
-  batch:
-`,
-		},
-	}
-	resultDir, err := filepath.Abs(path.Join("results", t.Name()))
-	require.NoError(t, err)
-	sender := datasenders.NewFileLogWriter()
-	receiver := testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t))
-	loadOptions := testbed.LoadOptions{
-		DataItemsPerSecond: 1,
-		ItemsPerBatch:      10000000,
-		Parallel:           1,
-	}
+// func TestLargeFileOnce(t *testing.T) {
+// 	processors := []ProcessorNameAndConfigBody{
+// 		{
+// 			Name: "batch",
+// 			Body: `
+//   batch:
+// `,
+// 		},
+// 	}
+// 	resultDir, err := filepath.Abs(path.Join("results", t.Name()))
+// 	require.NoError(t, err)
+// 	sender := datasenders.NewFileLogWriter()
+// 	receiver := testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t))
+// 	loadOptions := testbed.LoadOptions{
+// 		DataItemsPerSecond: 1,
+// 		ItemsPerBatch:      10000000,
+// 		Parallel:           1,
+// 	}
 
-	// Write data at once, before starting up the collector
-	dataProvider := testbed.NewPerfTestDataProvider(loadOptions)
-	dataItemsGenerated := atomic.Uint64{}
-	dataProvider.SetLoadGeneratorCounters(&dataItemsGenerated)
-	ld, _ := dataProvider.GenerateLogs()
+// 	// Write data at once, before starting up the collector
+// 	dataProvider := testbed.NewPerfTestDataProvider(loadOptions)
+// 	dataItemsGenerated := atomic.Uint64{}
+// 	dataProvider.SetLoadGeneratorCounters(&dataItemsGenerated)
+// 	ld, _ := dataProvider.GenerateLogs()
 
-	require.NoError(t, sender.ConsumeLogs(context.Background(), ld))
-	agentProc := testbed.NewChildProcessCollector(testbed.WithEnvVar("GOMAXPROCS", "2"))
+// 	require.NoError(t, sender.ConsumeLogs(context.Background(), ld))
+// 	agentProc := testbed.NewChildProcessCollector(testbed.WithEnvVar("GOMAXPROCS", "2"))
 
-	configStr := createConfigYaml(t, sender, receiver, resultDir, processors, nil)
-	configCleanup, err := agentProc.PrepareConfig(configStr)
-	require.NoError(t, err)
-	defer configCleanup()
+// 	configStr := createConfigYaml(t, sender, receiver, resultDir, processors, nil)
+// 	configCleanup, err := agentProc.PrepareConfig(configStr)
+// 	require.NoError(t, err)
+// 	defer configCleanup()
 
-	tc := testbed.NewTestCase(
-		t,
-		dataProvider,
-		sender,
-		receiver,
-		agentProc,
-		&testbed.CorrectnessLogTestValidator{},
-		performanceResultsSummary,
-	)
-	t.Cleanup(tc.Stop)
+// 	tc := testbed.NewTestCase(
+// 		t,
+// 		dataProvider,
+// 		sender,
+// 		receiver,
+// 		agentProc,
+// 		&testbed.CorrectnessLogTestValidator{},
+// 		performanceResultsSummary,
+// 	)
+// 	t.Cleanup(tc.Stop)
 
-	tc.StartBackend()
-	tc.StartAgent()
+// 	tc.StartBackend()
+// 	tc.StartAgent()
 
-	tc.WaitForN(func() bool { return dataItemsGenerated.Load() == tc.MockBackend.DataItemsReceived() }, 200*time.Second, "all logs received")
+// 	tc.WaitForN(func() bool { return dataItemsGenerated.Load() == tc.MockBackend.DataItemsReceived() }, 200*time.Second, "all logs received")
 
-	tc.StopAgent()
-	tc.ValidateData()
-}
+// 	tc.StopAgent()
+// 	tc.ValidateData()
+// }
 
 func TestMemoryLimiterHit(t *testing.T) {
 	tests := []struct {

@@ -1,4 +1,4 @@
-module github.com/rahuldoguparty/test
+module github.com/instana/instana-otel-collector/testbed
 
 go 1.23.4
 

@@ -384,13 +384,13 @@ genotelcontribcol: $(BUILDER)
 # Build the Collector executable.
 .PHONY: otelcontribcol
 otelcontribcol: genotelcontribcol
-	cd ./cmd/otelcontribcol && GO111MODULE=on CGO_ENABLED=0 $(GOCMD) build -trimpath -o ../../bin/otelcontribcol_$(GOOS)_$(GOARCH)$(EXTENSION) \
+	cd ./cmd/otelcontribcol && GO111MODULE=on CGO_ENABLED=0 $(GOCMD) build -trimpath -o ../../bin/instana-otel-collector_$(GOOS)_$(GOARCH)$(EXTENSION) \
 		-tags $(GO_BUILD_TAGS) .
 
 # Build the Collector executable without the symbol table, debug information, and the DWARF symbol table.
 .PHONY: otelcontribcollite
 otelcontribcollite: genotelcontribcol
-	cd ./cmd/otelcontribcol && GO111MODULE=on CGO_ENABLED=0 $(GOCMD) build -trimpath -o ../../bin/otelcontribcol_$(GOOS)_$(GOARCH)$(EXTENSION) \
+	cd ./cmd/otelcontribcol && GO111MODULE=on CGO_ENABLED=0 $(GOCMD) build -trimpath -o ../../bin/instana-otel-collector_$(GOOS)_$(GOARCH)$(EXTENSION) \
 		-tags $(GO_BUILD_TAGS) -ldflags $(GO_BUILD_LDFLAGS) .
 
 .PHONY: genoteltestbedcol

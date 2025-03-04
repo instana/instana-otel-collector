@@ -1,1 +1,1 @@
-package instana_otel_collector
+package instanaotelcollector

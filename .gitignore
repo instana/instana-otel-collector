@@ -4,3 +4,7 @@ super-linter.log
 
 # GitHub Actions leftovers
 github_conf
+
+# Testbed Outputs
+bin/
+.tools/

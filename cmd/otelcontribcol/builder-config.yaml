@@ -1,0 +1,49 @@
+# NOTE:
+# This builder configuration is NOT used to build any official binary.
+# To see the builder manifests used for official binaries,
+# check https://github.com/open-telemetry/opentelemetry-collector-releases
+#
+# For the OpenTelemetry Collector Contrib official distribution sources, check
+# https://github.com/open-telemetry/opentelemetry-collector-releases/tree/main/distributions/otelcol-contrib
+
+dist:
+  module: github.com/open-telemetry/opentelemetry-collector-contrib/cmd/otelcontribcol
+  name: otelcontribcol
+  description: Local OpenTelemetry Collector Contrib binary, testing only.
+  version: 0.120.1-dev
+  output_path: ./cmd/otelcontribcol
+
+extensions:
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/pprofextension v0.120.1
+
+
+exporters:
+  - gomod: go.opentelemetry.io/collector/exporter/debugexporter v0.120.1-0.20250224010654-18e18b21da7a
+  - gomod: go.opentelemetry.io/collector/exporter/otlpexporter v0.120.1-0.20250224010654-18e18b21da7a
+
+
+processors:
+  - gomod: go.opentelemetry.io/collector/processor/batchprocessor v0.120.1-0.20250224010654-18e18b21da7a
+  - gomod: go.opentelemetry.io/collector/processor/memorylimiterprocessor v0.120.1-0.20250224010654-18e18b21da7a
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor v0.120.1
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.120.1
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/transformprocessor v0.120.1
+
+
+receivers:
+  - gomod: go.opentelemetry.io/collector/receiver/otlpreceiver v0.120.1-0.20250224010654-18e18b21da7a
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/filelogreceiver v0.120.1
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver v0.120.1
+  
+
+providers:
+  - gomod: go.opentelemetry.io/collector/confmap/provider/envprovider v1.26.1-0.20250224010654-18e18b21da7a
+  - gomod: go.opentelemetry.io/collector/confmap/provider/fileprovider v1.26.1-0.20250224010654-18e18b21da7a
+  - gomod: go.opentelemetry.io/collector/confmap/provider/httpprovider v1.26.1-0.20250224010654-18e18b21da7a
+  - gomod: go.opentelemetry.io/collector/confmap/provider/httpsprovider v1.26.1-0.20250224010654-18e18b21da7a
+  - gomod: go.opentelemetry.io/collector/confmap/provider/yamlprovider v1.26.1-0.20250224010654-18e18b21da7a
+
+
+# When using `make genotelcontribcol`, a `replaces` section is appended to this
+# file before passing it to OCB, to ensure that local versions are used for all
+# Contrib modules.

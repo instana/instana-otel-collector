@@ -13,7 +13,7 @@ import (
 )
 
 func TestAgentExeOption(t *testing.T) {
-	path := "bin/otelcontribcol"
+	path := "bin/instanaotelcol"
 	col := NewChildProcessCollector(WithAgentExePath(path))
 
 	cpc, ok := col.(*childProcessCollector)

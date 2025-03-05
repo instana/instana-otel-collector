@@ -9,7 +9,7 @@ VERSION=$(shell git describe --always --match "v[0-9]*" HEAD)
 TRIMMED_VERSION=$(shell grep -o 'v[^-]*' <<< "$(VERSION)" | cut -c 2-)
 CORE_VERSIONS=$(SRC_PARENT_DIR)/opentelemetry-collector/versions.yaml
 
-COMP_REL_PATH=cmd/otelcontribcol/components.go
+COMP_REL_PATH=cmd/instanaotelcol/components.go
 MOD_NAME=github.com/open-telemetry/opentelemetry-collector-contrib
 
 GROUP ?= all
@@ -91,21 +91,21 @@ all-groups:
 	@echo -e "\ncgo: $(CGO_MODS)"
 	@echo -e "\ngenerated: $(GENERATED_MODS)"
 
-# .PHONY: mod-tidy
-# mod-tidy:
-# 	go mod tidy
-# 	go mod download
+.PHONY: mod-tidy
+mod-tidy:
+	go mod tidy
+	go mod download
 
 
 .PHONY: all
-all: install-tools all-common goporto multimod-verify gotest otelcontribcol
+all: install-tools all-common goporto multimod-verify gotest instanaotelcol
 
 .PHONY: all-common
 all-common:
 	@$(MAKE) $(FOR_GROUP_TARGET) TARGET="common"
 
 .PHONY: e2e-test
-e2e-test: otelcontribcol oteltestbedcol
+e2e-test: instanaotelcol instanaoteltestbedcol
 	$(MAKE) --no-print-directory -C testbed run-tests
 
 .PHONY: integration-test
@@ -118,7 +118,7 @@ integration-tests-with-cover:
 
 # Long-running e2e tests
 .PHONY: stability-tests
-stability-tests: otelcontribcol
+stability-tests: instanaotelcol
 	@echo Stability tests are disabled until we have a stable performance environment.
 	@echo To enable the tests replace this echo by $(MAKE) -C testbed run-stability-tests
 
@@ -132,8 +132,8 @@ gogci:
 # 	$(CROSSLINK) tidylist \
 # 		--validate \
 # 		--allow-circular allow-circular.txt \
-# 		--skip cmd/otelcontribcol/go.mod \
-# 		--skip cmd/oteltestbedcol/go.mod \
+# 		--skip cmd/instanaotelcol/go.mod \
+# 		--skip cmd/instanaoteltestbedcol/go.mod \
 # 		tidylist.txt
 
 # internal/tidylist/tidylist.txt lists modules in topological order, to ensure `go mod tidy` converges.
@@ -318,7 +318,7 @@ all-pwd:
 
 .PHONY: run
 run:
-	cd ./cmd/otelcontribcol && GO111MODULE=on $(GOCMD) run --race . --config ../../${RUN_CONFIG} ${RUN_ARGS}
+	cd ./cmd/instanaotelcol && GO111MODULE=on $(GOCMD) run --race . --config ../../${RUN_CONFIG} ${RUN_ARGS}
 
 .PHONY: docker-component # Not intended to be used directly
 docker-component: check-component
@@ -333,16 +333,16 @@ ifndef COMPONENT
 	$(error COMPONENT variable was not defined)
 endif
 
-.PHONY: docker-otelcontribcol
-docker-otelcontribcol:
-	COMPONENT=otelcontribcol $(MAKE) docker-component
+.PHONY: docker-instanaotelcol
+docker-instanaotelcol:
+	COMPONENT=instanaotelcol $(MAKE) docker-component
 
-.PHONY: docker-telemetrygen
-docker-telemetrygen:
-	GOOS=linux GOARCH=$(GOARCH) $(MAKE) telemetrygen
-	cp bin/telemetrygen_* cmd/telemetrygen/
-	cd cmd/telemetrygen && docker build --platform linux/$(GOARCH) --build-arg="TARGETOS=$(GOOS)" --build-arg="TARGETARCH=$(GOARCH)" -t telemetrygen:latest .
-	rm cmd/telemetrygen/telemetrygen_*
+# .PHONY: docker-telemetrygen
+# docker-telemetrygen:
+# 	GOOS=linux GOARCH=$(GOARCH) $(MAKE) telemetrygen
+# 	cp bin/telemetrygen_* cmd/telemetrygen/
+# 	cd cmd/telemetrygen && docker build --platform linux/$(GOARCH) --build-arg="TARGETOS=$(GOOS)" --build-arg="TARGETARCH=$(GOARCH)" -t telemetrygen:latest .
+# 	rm cmd/telemetrygen/telemetrygen_*
 
 .PHONY: generate
 generate: install-tools
@@ -377,47 +377,47 @@ chlog-preview: $(CHLOGGEN)
 chlog-update: $(CHLOGGEN)
 	$(CHLOGGEN) update --config $(CHLOGGEN_CONFIG) --version $(VERSION)
 
-.PHONY: genotelcontribcol
-genotelcontribcol: $(BUILDER)
-	$(BUILDER) --skip-compilation --config cmd/otelcontribcol/builder-config.yaml
+.PHONY: geninstanaotelcol
+geninstanaotelcol: $(BUILDER)
+	$(BUILDER) --skip-compilation --config cmd/instanaotelcol/builder-config.yaml
 
 # Build the Collector executable.
-.PHONY: otelcontribcol
-otelcontribcol: genotelcontribcol
-	cd ./cmd/otelcontribcol && GO111MODULE=on CGO_ENABLED=0 $(GOCMD) build -trimpath -o ../../bin/otelcontribcol_$(GOOS)_$(GOARCH)$(EXTENSION) \
+.PHONY: instanaotelcol
+instanaotelcol: geninstanaotelcol
+	cd ./cmd/instanaotelcol && GO111MODULE=on CGO_ENABLED=0 $(GOCMD) build -trimpath -o ../../bin/instana-otel-collector_$(GOOS)_$(GOARCH)$(EXTENSION) \
 		-tags $(GO_BUILD_TAGS) .
 
 # Build the Collector executable without the symbol table, debug information, and the DWARF symbol table.
-.PHONY: otelcontribcollite
-otelcontribcollite: genotelcontribcol
-	cd ./cmd/otelcontribcol && GO111MODULE=on CGO_ENABLED=0 $(GOCMD) build -trimpath -o ../../bin/otelcontribcol_$(GOOS)_$(GOARCH)$(EXTENSION) \
+.PHONY: instanaotelcollite
+instanaotelcollite: geninstanaotelcol
+	cd ./cmd/instanaotelcol && GO111MODULE=on CGO_ENABLED=0 $(GOCMD) build -trimpath -o ../../bin/instana-otel-collector_$(GOOS)_$(GOARCH)$(EXTENSION) \
 		-tags $(GO_BUILD_TAGS) -ldflags $(GO_BUILD_LDFLAGS) .
 
-.PHONY: genoteltestbedcol
-genoteltestbedcol: $(BUILDER)
-	$(BUILDER) --skip-compilation --config cmd/oteltestbedcol/builder-config.yaml
+.PHONY: geninstanaoteltestbedcol
+geninstanaoteltestbedcol: $(BUILDER)
+	$(BUILDER) --skip-compilation --config cmd/instanaoteltestbedcol/builder-config.yaml
 
 # Build the Collector executable, with only components used in testbed.
-.PHONY: oteltestbedcol
-oteltestbedcol: genoteltestbedcol
-	cd ./cmd/oteltestbedcol && GO111MODULE=on CGO_ENABLED=0 $(GOCMD) build -trimpath -o ../../bin/oteltestbedcol_$(GOOS)_$(GOARCH)$(EXTENSION) \
+.PHONY: instanaoteltestbedcol
+instanaoteltestbedcol: geninstanaoteltestbedcol
+	cd ./cmd/instanaoteltestbedcol && GO111MODULE=on CGO_ENABLED=0 $(GOCMD) build -trimpath -o ../../bin/instana-otel-collector-testbed_$(GOOS)_$(GOARCH)$(EXTENSION) \
 		-tags $(GO_BUILD_TAGS) .
 
-.PHONY: oteltestbedcollite
-oteltestbedcollite: genoteltestbedcol
-	cd ./cmd/oteltestbedcol && GO111MODULE=on CGO_ENABLED=0 $(GOCMD) build -trimpath -o ../../bin/oteltestbedcol_$(GOOS)_$(GOARCH)$(EXTENSION) \
+.PHONY: instanaoteltestbedcollite
+instanaoteltestbedcollite: geninstanaoteltestbedcol
+	cd ./cmd/instanaoteltestbedcol && GO111MODULE=on CGO_ENABLED=0 $(GOCMD) build -trimpath -o ../../bin/instana-otel-collector-testbed_$(GOOS)_$(GOARCH)$(EXTENSION) \
 		-tags $(GO_BUILD_TAGS) -ldflags $(GO_BUILD_LDFLAGS) .
 
-# Build the telemetrygen executable.
-.PHONY: telemetrygen
-telemetrygen:
-	cd ./cmd/telemetrygen && GO111MODULE=on CGO_ENABLED=0 $(GOCMD) build -trimpath -o ../../bin/telemetrygen_$(GOOS)_$(GOARCH)$(EXTENSION) \
-		-tags $(GO_BUILD_TAGS) .
+# # Build the telemetrygen executable.
+# .PHONY: telemetrygen
+# telemetrygen:
+# 	cd ./cmd/telemetrygen && GO111MODULE=on CGO_ENABLED=0 $(GOCMD) build -trimpath -o ../../bin/telemetrygen_$(GOOS)_$(GOARCH)$(EXTENSION) \
+# 		-tags $(GO_BUILD_TAGS) .
 
-.PHONY: telemetrygenlite
-telemetrygenlite:
-	cd ./cmd/telemetrygen && GO111MODULE=on CGO_ENABLED=0 $(GOCMD) build -trimpath -o ../../bin/telemetrygen_$(GOOS)_$(GOARCH)$(EXTENSION) \
-		-tags $(GO_BUILD_TAGS) -ldflags $(GO_BUILD_LDFLAGS) .
+# .PHONY: telemetrygenlite
+# telemetrygenlite:
+# 	cd ./cmd/telemetrygen && GO111MODULE=on CGO_ENABLED=0 $(GOCMD) build -trimpath -o ../../bin/telemetrygen_$(GOOS)_$(GOARCH)$(EXTENSION) \
+# 		-tags $(GO_BUILD_TAGS) -ldflags $(GO_BUILD_LDFLAGS) .
 
 # helper function to update the core packages in builder-config.yaml
 # input parameters are
@@ -447,18 +447,18 @@ endef
 
 .PHONY: update-otel
 update-otel:$(MULTIMOD)
-	# Make sure cmd/otelcontribcol/go.mod and cmd/oteltestbedcol/go.mod are present
-	$(MAKE) genotelcontribcol
-	$(MAKE) genoteltestbedcol
+	# Make sure cmd/instanaotelcol/go.mod and cmd/instanaoteltestbedcol/go.mod are present
+	$(MAKE) geninstanaotelcol
+	$(MAKE) geninstanaoteltestbedcol
 	$(MULTIMOD) sync -s=true -o ../opentelemetry-collector -m stable --commit-hash $(OTEL_STABLE_VERSION)
 	git add . && git commit -s -m "[chore] multimod update stable modules" ; \
 	$(MULTIMOD) sync -s=true -o ../opentelemetry-collector -m beta --commit-hash $(OTEL_VERSION)
 	git add . && git commit -s -m "[chore] multimod update beta modules" ; \
 	$(MAKE) gotidy
-	$(call updatehelper,$(CORE_VERSIONS),./cmd/otelcontribcol/go.mod,./cmd/otelcontribcol/builder-config.yaml)
-	$(call updatehelper,$(CORE_VERSIONS),./cmd/oteltestbedcol/go.mod,./cmd/oteltestbedcol/builder-config.yaml)
-	$(MAKE) genotelcontribcol
-	$(MAKE) genoteltestbedcol
+	$(call updatehelper,$(CORE_VERSIONS),./cmd/instanaotelcol/go.mod,./cmd/instanaotelcol/builder-config.yaml)
+	$(call updatehelper,$(CORE_VERSIONS),./cmd/instanaoteltestbedcol/go.mod,./cmd/instanaoteltestbedcol/builder-config.yaml)
+	$(MAKE) geninstanaotelcol
+	$(MAKE) geninstanaoteltestbedcol
 	$(MAKE) generate
 	$(MAKE) crosslink
 	# Tidy again after generating code
@@ -492,9 +492,9 @@ build-examples:
 .PHONY: deb-rpm-package
 %-package: ARCH ?= amd64
 %-package:
-	GOOS=linux GOARCH=$(ARCH) $(MAKE) otelcontribcol
-	docker build -t otelcontribcol-fpm internal/buildscripts/packaging/fpm
-	docker run --rm -v $(CURDIR):/repo -e PACKAGE=$* -e VERSION=$(VERSION) -e ARCH=$(ARCH) otelcontribcol-fpm
+	GOOS=linux GOARCH=$(ARCH) $(MAKE) instanaotelcol
+	docker build -t instanaotelcol-fpm internal/buildscripts/packaging/fpm
+	docker run --rm -v $(CURDIR):/repo -e PACKAGE=$* -e VERSION=$(VERSION) -e ARCH=$(ARCH) instanaotelcol-fpm
 
 # Verify existence of READMEs for components specified as default components in the collector.
 .PHONY: checkdoc
@@ -506,18 +506,18 @@ checkdoc: $(CHECKFILE)
 checkmetadata: $(CHECKFILE)
 	$(CHECKFILE) --project-path $(CURDIR) --component-rel-path $(COMP_REL_PATH) --module-name $(MOD_NAME) --file-name "metadata.yaml"
 
-.PHONY: checkapi
-checkapi:
-	$(GOCMD) run cmd/checkapi/main.go .
+# .PHONY: checkapi
+# checkapi:
+# 	$(GOCMD) run cmd/checkapi/main.go .
 
 .PHONY: kind-ready
 kind-ready:
 	@if [ -n "$(shell kind get clusters -q)" ]; then echo "kind is ready"; else echo "kind not ready"; exit 1; fi
 
 .PHONY: kind-build
-kind-build: kind-ready docker-otelcontribcol
-	docker tag otelcontribcol otelcontribcol-dev:0.0.1
-	kind load docker-image otelcontribcol-dev:0.0.1
+kind-build: kind-ready docker-instanaotelcol
+	docker tag instanaotelcol instanaotelcol-dev:0.0.1
+	kind load docker-image instanaotelcol-dev:0.0.1
 
 .PHONY: kind-install-daemonset
 kind-install-daemonset: kind-ready kind-uninstall-daemonset## Install a local Collector version into the cluster.
@@ -551,18 +551,18 @@ $(1)
 
 endef
 
-# List of directories where certificates are stored for unit tests.
-CERT_DIRS := receiver/sapmreceiver/testdata \
-             receiver/signalfxreceiver/testdata \
-             receiver/splunkhecreceiver/testdata \
-             receiver/mongodbatlasreceiver/testdata/alerts/cert \
-             receiver/mongodbreceiver/testdata/certs \
-             receiver/cloudflarereceiver/testdata/cert
+# # List of directories where certificates are stored for unit tests.
+# CERT_DIRS := receiver/sapmreceiver/testdata \
+#              receiver/signalfxreceiver/testdata \
+#              receiver/splunkhecreceiver/testdata \
+#              receiver/mongodbatlasreceiver/testdata/alerts/cert \
+#              receiver/mongodbreceiver/testdata/certs \
+#              receiver/cloudflarereceiver/testdata/cert
 
-# Generate certificates for unit tests relying on certificates.
-.PHONY: certs
-certs:
-	$(foreach dir, $(CERT_DIRS), $(call exec-command, @internal/buildscripts/gen-certs.sh -o $(dir)))
+# # Generate certificates for unit tests relying on certificates.
+# .PHONY: certs
+# certs:
+# 	$(foreach dir, $(CERT_DIRS), $(call exec-command, @internal/buildscripts/gen-certs.sh -o $(dir)))
 
 .PHONY: multimod-verify
 multimod-verify: $(MULTIMOD)
@@ -607,8 +607,8 @@ checks:
 	$(MAKE) -j4 goporto
 	$(MAKE) crosslink
 	$(MAKE) -j4 gotidy
-	$(MAKE) genotelcontribcol
-	$(MAKE) genoteltestbedcol
+	$(MAKE) geninstanaotelcol
+	$(MAKE) geninstanaoteltestbedcol
 	$(MAKE) gendistributions
 	$(MAKE) -j4 generate
 	$(MAKE) multimod-verify

@@ -31,14 +31,14 @@ setup_environment() {
 # Function to build the collector
 build_collector() {
 	echo "Building Instana Collector..."
-	./builder --config builder-config.yaml
+	./builder --config config/builder/builder-config.yaml
 }
 
 # Function to package files
 package_files() {
 	echo "Packaging Files..."
 	mkdir -p collector/bin collector/config
-	cp config.yaml collector/config
+	cp config/linux/config.yaml collector/config
 	cp tools/packaging/linux/instana_collector_service.sh collector/bin
 	cp tools/packaging/linux/uninstall.sh collector/bin
 	mv otelcol-dev/otelcol-dev collector/bin/instana-otelcol

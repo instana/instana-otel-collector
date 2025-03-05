@@ -1,4 +1,4 @@
-type: otelcontribcol
+type: instanaoteltestbedcol
 
 status:
   class: cmd

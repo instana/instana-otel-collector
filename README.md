@@ -1,6 +1,6 @@
 # Instana Distribution of OpenTelemetry Collector
 
-![e2e-test](https://github.com/instana/instana-otel-collector/blob/main/.github/workflows/test_build.yaml/badge.svg)
+![e2e-test](https://github.com/instana/instana-otel-collector/actions/workflows/test_build.yaml/badge.svg)
 
 ## Overview
 

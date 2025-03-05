@@ -1,6 +1,5 @@
 # instana-otel-collector
 
-
 ## Overview
 
 The Instana Distibution of OpenTelemetry Collector aims to bring a streamlined OpenTelemetry experience to the Instana ecosystem.
@@ -28,7 +27,6 @@ Once this has been downloaded, the installer script can be run by
 The installation script will install and initiate the Instana Collector Service on your system using the parameters above.
 
 These paramaters can be changed later in the `config.env` file found under `install_path` (default is `/opt/instana`)
-
 
 ### Windows
 

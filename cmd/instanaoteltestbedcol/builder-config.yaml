@@ -5,10 +5,10 @@
 
 dist:
   module: github.com/open-telemetry/opentelemetry-collector-contrib/cmd/oteltestbedcol
-  name: oteltestbedcol
-  description: OpenTelemetry Collector binary for testbed only tests.
+  name: instana-otel-collector-testbed
+  description: Instana OpenTelemetry Collector Testbed
   version: 0.120.1-dev
-  output_path: ./cmd/oteltestbedcol
+  output_path: ./cmd/instanaoteltestbedcol
 
 extensions:
   - gomod: go.opentelemetry.io/collector/extension/zpagesextension v0.120.1-0.20250224010654-18e18b21da7a
@@ -59,7 +59,7 @@ providers:
   - gomod: go.opentelemetry.io/collector/confmap/provider/httpsprovider v1.26.1-0.20250224010654-18e18b21da7a
   - gomod: go.opentelemetry.io/collector/confmap/provider/yamlprovider v1.26.1-0.20250224010654-18e18b21da7a
 
-# When using `make genoteltestbedcol`, a `replaces` section is appended to this
+# When using `make geninstanaoteltestbedcol`, a `replaces` section is appended to this
 # file before passing it to OCB, to ensure that local versions are used for all
 # Contrib modules.
 

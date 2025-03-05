@@ -23,8 +23,8 @@ Once this has been downloaded, the installer script can be run by
 ```bash
 ./instana_otelcol_setup.sh -e <INSTANA_OTEL_ENDPOINT_GRPC> -a <INSTANA_KEY> [-H <INSTANA_OTEL_ENDPOINT_HTTP>] [<install_path>]
 ```
-> [!NOTE]
-> `INSTANA_OTEL_ENDPOINT_GRPC` and `INSTANA_KEY` are required parameters to run the installer
+
+> [!NOTE] > `INSTANA_OTEL_ENDPOINT_GRPC` and `INSTANA_KEY` are required parameters to run the installer
 
 The installation script will install and initiate the Instana Collector Service on your system using the parameters above.
 
@@ -41,7 +41,6 @@ Coming soon...
 ## Configuration and Setup
 
 The collector can be fine tuned for your needs through the use of a `config.yaml` file that is found under `collector/config`.
-
 
 ## Uninstallation
 

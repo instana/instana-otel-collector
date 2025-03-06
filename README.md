@@ -1,6 +1,7 @@
 # Instana Distribution of OpenTelemetry Collector
 
 ![e2e-test](https://github.com/instana/instana-otel-collector/actions/workflows/test_build.yaml/badge.svg)
+![Release](https://img.shields.io/github/v/release/instana/instana-otel-collector)
 
 ## Overview
 
@@ -24,7 +25,8 @@ Once this has been downloaded, the installer script can be run by
 ./instana_otelcol_setup.sh -e <INSTANA_OTEL_ENDPOINT_GRPC> -a <INSTANA_KEY> [-H <INSTANA_OTEL_ENDPOINT_HTTP>] [<install_path>]
 ```
 
-> [!NOTE] > `INSTANA_OTEL_ENDPOINT_GRPC` and `INSTANA_KEY` are required parameters to run the installer
+> [!NOTE] 
+> `INSTANA_OTEL_ENDPOINT_GRPC` and `INSTANA_KEY` are required parameters to run the installer
 
 The installation script will install and initiate the Instana Collector Service on your system using the parameters above.
 
@@ -40,10 +42,23 @@ Coming soon...
 
 ## Configuration and Setup
 
-The collector can be fine tuned for your needs through the use of a `config.yaml` file that is found under `collector/config`.
+The collector can be fine tuned for your needs through the use of a `config.yaml` file. Based on the operating system the path will change:
+
+| OS  | Default Path  |
+|---|---|
+| Linux   | `/opt/instana/collector/config.yaml`  |
+
+
+## OpAmp Support
+
+Coming soon...
 
 ## Uninstallation
 
 The installation script adds an uninstallation script under `collector/bin` in `install_path`
 
 Running this script will stop the Instana Collector Service and remove all collector files from the system.
+
+## Contributing
+
+Instana Distribution of OpenTelemetry Collector is an open source project and any contribution is welcome and appreciated.

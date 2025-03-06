@@ -44,8 +44,8 @@ Coming soon...
 
 The collector can be fine tuned for your needs through the use of a `config.yaml` file. Based on the operating system the path will change:
 
-| OS  | Default Path  |
-|---|---|
+| OS      | Default Path                          |
+|---------|---------------------------------------|
 | Linux   | `/opt/instana/collector/config.yaml`  |
 
 
@@ -56,9 +56,10 @@ See the table below for links to supported components
 | Component     |  Link                                                                                                  |
 |---------------|--------------------------------------------------------------------------------------------------------|
 | Receivers     | [Receiver List](https://github.com/instana/instana-otel-collector/blob/readme/docs/receivers.md)       |
-| Processors    | [Processor List](https://github.com/instana/instana-otel-collector/blob/readme/docs/receivers.md)      |
-| Exporters     | [Exporter List](https://github.com/instana/instana-otel-collector/blob/readme/docs/receivers.md)       |
-
+| Processors    | [Processor List](https://github.com/instana/instana-otel-collector/blob/readme/docs/processors.md)     |
+| Exporters     | [Exporter List](https://github.com/instana/instana-otel-collector/blob/readme/docs/exporters.md)       |
+| Extensions    | [Exporter List](https://github.com/instana/instana-otel-collector/blob/readme/docs/extensions.md)       |
+| Providers     | [Provider List](https://github.com/instana/instana-otel-collector/blob/readme/docs/providers.md)       |
 
 ## OpAmp Support
 

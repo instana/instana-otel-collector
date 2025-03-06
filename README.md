@@ -49,6 +49,17 @@ The collector can be fine tuned for your needs through the use of a `config.yaml
 | Linux   | `/opt/instana/collector/config.yaml`  |
 
 
+## Supported Components
+
+See the table below for links to supported components
+
+| Component     |  Link                                                                                                  |
+|---------------|--------------------------------------------------------------------------------------------------------|
+| Receivers     | [Receiver List](https://github.com/instana/instana-otel-collector/blob/readme/docs/receivers.md)       |
+| Processors    | [Processor List](https://github.com/instana/instana-otel-collector/blob/readme/docs/receivers.md)      |
+| Exporters     | [Exporter List](https://github.com/instana/instana-otel-collector/blob/readme/docs/receivers.md)       |
+
+
 ## OpAmp Support
 
 Coming soon...

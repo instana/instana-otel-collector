@@ -49,6 +49,32 @@ The collector can be fine tuned for your needs through the use of a `config.yaml
 | Linux   | `/opt/instana/collector/config.yaml`  |
 
 
+Pipelines for Telemetry Data can be defined and altered as needed. For example, a simple pipeline for log data can be defined as follows:
+
+```yaml
+receivers:
+    # Specifies a file log receiver to include logs from a given path
+    filelog:
+        include: ["path/to/logs/*.log"]
+processors:
+    # Specify a transform processor to add a processed attribute to the log
+    transform:
+        log_statements:
+            - set(log.body, log.attributes["processed"])
+exporters:
+    # Configure an otlp exporter for this log data to be sent to
+    otlp:
+        endpoint: YOURENDPOINT
+
+# Assemble the data pipeline from the configured components
+services:
+    pipelines:
+        logs:
+            receivers: [filelog]
+            processors: [transform]
+            exporters: [otlp]
+```
+
 ## Supported Components
 
 See the table below for links to supported components

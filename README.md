@@ -5,7 +5,7 @@
 
 ## Overview
 
-The Instana Distibution of OpenTelemetry Collector aims to bring a streamlined OpenTelemetry experience to the Instana ecosystem.
+The Instana Distibution of OpenTelemetry Collector (IDOT) aims to bring a streamlined OpenTelemetry experience to the Instana ecosystem.
 
 ## Getting Started
 
@@ -31,6 +31,24 @@ Once this has been downloaded, the installer script can be run by
 The installation script will install and initiate the Instana Collector Service on your system using the parameters above.
 
 These paramaters can be changed later in the `config.env` file found under `install_path` (default is `/opt/instana`)
+
+#### Instana Collector Service
+
+By default the installer will install and start the service. However, there are a few parameters to choose from when interacting with the Instana Collector Service. Each of these all run the corresponding `systemd` commands in a user friendly manner.
+
+```bash
+instana-collector install # Will install the service (done automatically by installation script)
+
+instana-collector uninstall # Uninstall the service (done automatically by uninstallation script)
+
+instana-collector status # Display the activity status of the collector service
+
+instana-collector start # Initiate the collector service
+
+instana-collector stop # Stop the collector service
+
+instana-collector restart # Restart the collector service
+```
 
 ### Windows
 

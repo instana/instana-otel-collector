@@ -9,11 +9,11 @@
 
 <!-- Badges -->
 <p align="center">
-  <a href="https://github.com/instana/instana-otel-collector/actions/workflows/test_build.yaml">
-    <img src="https://github.com/instana/instana-otel-collector/workflows/Run End to End Tests/badge.svg" alt="Build Status">
+  <a href="https://github.com/instana/instana-otel-collector/actions/workflows/test_build.yaml" style="text-decoration:none">
+    <img src="https://github.com/instana/instana-otel-collector/workflows/Run End to End Tests/badge.svg" alt="Build Status" />
   </a>
-  <a href="https://github.com/instana/instana-otel-collector/releases/latest">
-    <img src="https://img.shields.io/github/v/release/instana/instana-otel-collector.svg?style-for-the-badge&color=05b5b3" alt="Latest Release">
+  <a href="https://github.com/instana/instana-otel-collector/releases/latest" style="text-decoration:none">
+    <img src="https://img.shields.io/github/v/release/instana/instana-otel-collector.svg?style-for-the-badge&color=05b5b3" alt="Latest Release" />
   </a>
 </p>
 

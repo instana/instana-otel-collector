@@ -18,7 +18,7 @@ Visit the [IBM OpenTelemetry Documentation](https://www.ibm.com/docs/en/instana-
 On Linux machines, setup up can be done by downloading the latest release of the installer via the command:
 
 ```bash
-curl -Lo instana_otelcol_setup.sh https://github.com/instana/instana-otel-collector/releases/download/v0.0.10/instana-collector-installer-v0.0.10.sh
+curl -Lo instana_otelcol_setup.sh https://github.com/instana/instana-otel-collector/releases/latest/download/instana-collector-installer-latest.sh
 
 chmod +x instana_otelcol_setup.sh
 ```

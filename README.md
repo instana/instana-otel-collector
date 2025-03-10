@@ -7,6 +7,10 @@
 
 The Instana Distibution of OpenTelemetry Collector (IDOT) aims to bring a streamlined OpenTelemetry experience to the Instana ecosystem.
 
+IDOT was built using the builder found on the [OpenTelemetry GitHub](https://github.com/open-telemetry/opentelemetry-collector) and follows the documentation found on the official [OpenTelemetry Website](https://opentelemetry.io/).
+
+Visit the [IBM OpenTelemetry Documentation](https://www.ibm.com/docs/en/instana-observability/current?topic=apis-opentelemetry) page to learn more about Instana-OpenTelemetry synergy.
+
 ## Getting Started
 
 ### Linux

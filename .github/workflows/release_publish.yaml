@@ -53,12 +53,21 @@ jobs:
         run: |
           echo "Running packaging script for version: ${{ needs.versioning.outputs.version }}"
           ./tools/packaging/linux/package_instana_collector.sh ${{ needs.versioning.outputs.version }}
+          cp instana-collector-installer-v${{ needs.versioning.outputs.version }}.sh instana-collector-installer-latest.sh
           ls -a
 
-      - name: Upload Generated Files
+      - name: Upload Versioned Installer
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
-          echo "Uploading generated files..."
+          echo "Uploading versioned files..."
           gh release upload ${{ github.ref_name }} instana-collector-installer-v${{ needs.versioning.outputs.version }}.sh
-          echo "Uploaded installer"
+          echo "Uploaded versioned installer"
+
+      - name: Upload Latest Installer
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          echo "Uploading latest files..."
+          gh release upload ${{ github.ref_name }} instana-collector-installer-latest.sh
+          echo "Uploaded latest installer"

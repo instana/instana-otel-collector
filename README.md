@@ -1,11 +1,25 @@
 # Instana Distribution of OpenTelemetry Collector
 
-![e2e-test](https://github.com/instana/instana-otel-collector/actions/workflows/test_build.yaml/badge.svg)
-![Release](https://img.shields.io/github/v/release/instana/instana-otel-collector)
+<!-- Instana Logo -->
+<a href="https://www.ibm.com/products/instana">
+    <p align="center">
+        <img src="docs/assets/instana-logo.png">
+    </p>
+</a>
+
+<!-- Badges -->
+<p align="center">
+  <a href="https://github.com/instana/instana-otel-collector/actions/workflows/test_build.yaml">
+    <img src="https://github.com/instana/instana-otel-collector/workflows/Run End to End Tests/badge.svg" alt="Build Status">
+  </a>
+  <a href="https://github.com/instana/instana-otel-collector/releases/latest">
+    <img src="https://img.shields.io/github/v/release/instana/instana-otel-collector.svg?style-for-the-badge&color=05b5b3" alt="Latest Release">
+  </a>
+</p>
 
 ## Overview
 
-The Instana Distibution of OpenTelemetry Collector (IDOT) aims to bring a streamlined OpenTelemetry experience to the Instana ecosystem.
+The **Instana Distibution of OpenTelemetry Collector** (IDOT) aims to bring a streamlined OpenTelemetry experience to the Instana ecosystem.
 
 IDOT was built using the builder found on the [OpenTelemetry GitHub](https://github.com/open-telemetry/opentelemetry-collector) and follows the documentation found on the official [OpenTelemetry Website](https://opentelemetry.io/).
 

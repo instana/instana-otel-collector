@@ -102,7 +102,7 @@ See the table below for links to supported components
 | Receivers     | [Receiver List](https://github.com/instana/instana-otel-collector/blob/readme/docs/receivers.md)       |
 | Processors    | [Processor List](https://github.com/instana/instana-otel-collector/blob/readme/docs/processors.md)     |
 | Exporters     | [Exporter List](https://github.com/instana/instana-otel-collector/blob/readme/docs/exporters.md)       |
-| Extensions    | [Exporter List](https://github.com/instana/instana-otel-collector/blob/readme/docs/extensions.md)       |
+| Extensions    | [Extensions List](https://github.com/instana/instana-otel-collector/blob/readme/docs/extensions.md)       |
 | Providers     | [Provider List](https://github.com/instana/instana-otel-collector/blob/readme/docs/providers.md)       |
 
 ## OpAmp Support

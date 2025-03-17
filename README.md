@@ -48,11 +48,11 @@ Once this has been downloaded, the installer script can be run by
 
 The installation script will install and initiate the Instana Collector Service on your system using the parameters above.
 
-These paramaters can be changed later in the `config.env` file found under `install_path` (default is `/opt/instana`)
+These paramaters can be changed later in the `config.env` file found under `install_path` (default is `/opt/instana/collector/config/config.env`)
 
 #### Instana Collector Service
 
-By default the installer will install and start the service. However, there are a few parameters to choose from when interacting with the Instana Collector Service. Each of these all run the corresponding `systemd` commands in a user friendly manner. Run these commands under the `bin` folder within the install path (default is `/opt/instana/collector/bin`).
+By default the installer will install and start the service. However, there are a few parameters to choose from when interacting with the Instana Collector Service. Each of these all run the corresponding `systemd` commands in a user friendly manner. Run these commands under the `bin` folder within the `install_path` (default is `/opt/instana/collector/bin`).
 
 ```bash
 ./instana_collector_service install # Will install the service (done automatically by installation script)

@@ -48,24 +48,36 @@ Once this has been downloaded, the installer script can be run by
 
 The installation script will install and initiate the Instana Collector Service on your system using the parameters above.
 
-These paramaters can be changed later in the `config.env` file found under `install_path` (default is `/opt/instana`)
+These paramaters can be changed later in the `config.env` file found under `install_path` (default is `/opt/instana/collector/config/config.env`)
 
 #### Instana Collector Service
 
-By default the installer will install and start the service. However, there are a few parameters to choose from when interacting with the Instana Collector Service. Each of these all run the corresponding `systemd` commands in a user friendly manner.
+By default the installer will install and start the service. However, there are a few parameters to choose from when interacting with the Instana Collector Service. Each of these all run the corresponding `systemd` commands in a user friendly manner. Run these commands under the `bin` folder within the `install_path` (default is `/opt/instana/collector/bin`).
 
 ```bash
-instana-collector install # Will install the service (done automatically by installation script)
+./instana_collector_service install # Will install the service (done automatically by installation script)
 
-instana-collector uninstall # Uninstall the service (done automatically by uninstallation script)
+./instana_collector_service uninstall # Uninstall the service (done automatically by uninstallation script)
 
-instana-collector status # Display the activity status of the collector service
+./instana_collector_service status # Display the activity status of the collector service
 
-instana-collector start # Initiate the collector service
+./instana_collector_service start # Initiate the collector service
 
-instana-collector stop # Stop the collector service
+./instana_collector_service stop # Stop the collector service
 
-instana-collector restart # Restart the collector service
+./instana_collector_service restart # Restart the collector service
+```
+
+Additionally, the `service` command can be used here as well.
+
+```bash
+service instana-collector start # Start collector service
+
+service instana-collector stop # Stop collector service
+
+service instana-collector restart # Restart collector service
+
+service instana-collector status # Display status of collector service
 ```
 
 ### Windows
@@ -80,9 +92,9 @@ Coming soon...
 
 The collector can be fine tuned for your needs through the use of a `config.yaml` file. Based on the operating system the path will change:
 
-| OS      | Default Path                          |
-|---------|---------------------------------------|
-| Linux   | `/opt/instana/collector/config.yaml`  |
+| OS      | Default Path                                 |
+|---------|----------------------------------------------|
+| Linux   | `/opt/instana/collector/config/config.yaml`  |
 
 
 Pipelines for Telemetry Data can be defined and altered as needed. For example, a simple pipeline for log data can be defined as follows:

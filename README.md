@@ -55,17 +55,17 @@ These paramaters can be changed later in the `config.env` file found under `inst
 By default the installer will install and start the service. However, there are a few parameters to choose from when interacting with the Instana Collector Service. Each of these all run the corresponding `systemd` commands in a user friendly manner. Run these commands under the `bin` folder within the `install_path` (default is `/opt/instana/collector/bin`).
 
 ```bash
-./instana_collector_service install # Will install the service (done automatically by installation script)
+./instana_collector_service.sh install # Will install the service (done automatically by installation script)
 
-./instana_collector_service uninstall # Uninstall the service (done automatically by uninstallation script)
+./instana_collector_service.sh uninstall # Uninstall the service (done automatically by uninstallation script)
 
-./instana_collector_service status # Display the activity status of the collector service
+./instana_collector_service.sh status # Display the activity status of the collector service
 
-./instana_collector_service start # Initiate the collector service
+./instana_collector_service.sh start # Initiate the collector service
 
-./instana_collector_service stop # Stop the collector service
+./instana_collector_service.sh stop # Stop the collector service
 
-./instana_collector_service restart # Restart the collector service
+./instana_collector_service.sh restart # Restart the collector service
 ```
 
 Additionally, the `service` command can be used here as well.

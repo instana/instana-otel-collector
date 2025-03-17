@@ -52,7 +52,7 @@ These paramaters can be changed later in the `config.env` file found under `inst
 
 #### Instana Collector Service
 
-By default the installer will install and start the service. However, there are a few parameters to choose from when interacting with the Instana Collector Service. Each of these all run the corresponding `systemd` commands in a user friendly manner. Run these commands under the `bin` folder within the install path.
+By default the installer will install and start the service. However, there are a few parameters to choose from when interacting with the Instana Collector Service. Each of these all run the corresponding `systemd` commands in a user friendly manner. Run these commands under the `bin` folder within the install path (default is `/opt/instana/collector/bin`).
 
 ```bash
 ./instana_collector_service install # Will install the service (done automatically by installation script)
@@ -92,9 +92,9 @@ Coming soon...
 
 The collector can be fine tuned for your needs through the use of a `config.yaml` file. Based on the operating system the path will change:
 
-| OS      | Default Path                          |
-|---------|---------------------------------------|
-| Linux   | `/opt/instana/collector/config.yaml`  |
+| OS      | Default Path                                 |
+|---------|----------------------------------------------|
+| Linux   | `/opt/instana/collector/config/config.yaml`  |
 
 
 Pipelines for Telemetry Data can be defined and altered as needed. For example, a simple pipeline for log data can be defined as follows:

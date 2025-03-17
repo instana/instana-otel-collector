@@ -68,6 +68,18 @@ By default the installer will install and start the service. However, there are 
 ./instana_collector_service restart # Restart the collector service
 ```
 
+Additionally, the `service` command can be used here as well.
+
+```bash
+service instana-collector start # Start collector service
+
+service instana-collector stop # Stop collector service
+
+service instana-collector restart # Restart collector service
+
+service instana-collector status # Display status of collector service
+```
+
 ### Windows
 
 Coming soon...

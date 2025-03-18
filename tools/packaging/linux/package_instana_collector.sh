@@ -74,9 +74,10 @@ INSTALL_PATH="/opt/instana"
 INSTANA_OTEL_ENDPOINT_GRPC=""
 INSTANA_OTEL_ENDPOINT_HTTP=""
 INSTANA_KEY=""
+SKIP_INSTALL_SERVICE=false
 
 # Parse arguments
-while getopts "he:H:a:" opt; do
+while getopts "he:H:a:s" opt; do
   case \${opt} in
     h )
       show_help
@@ -89,6 +90,9 @@ while getopts "he:H:a:" opt; do
       ;;
     a )
       INSTANA_KEY="\$OPTARG"
+      ;;
+    s )
+      SKIP_INSTALL_SERVICE=true
       ;;
     \? )
       show_help
@@ -126,8 +130,10 @@ echo "INSTANA_KEY=\$INSTANA_KEY" >> "\$INSTALL_PATH/collector/config/config.env"
 
 chmod 600 "\$INSTALL_PATH/collector/config/config.env"
 
-echo "Running instana_collector_service.sh install..."
-"\$INSTALL_PATH/collector/bin/instana_collector_service.sh" install
+if [[ "\$SKIP_INSTALL_SERVICE" == "false" ]]; then
+  echo "Running instana_collector_service.sh install..."
+  "\$INSTALL_PATH/collector/bin/instana_collector_service.sh" install
+fi
 
 echo "Extraction complete. Files are available at \$INSTALL_PATH."
 EOL

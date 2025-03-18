@@ -1,6 +1,6 @@
 module github.com/instana/instana-otel-collector/testbed
 
-go 1.23.4
+go 1.23.7
 
 retract (
 	v0.76.2

@@ -4,4 +4,4 @@ List of supported extensions with their GitHub Reference
 
 | Name                                    | GitHub README                                                                                                                                                      |
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| OpAMP Extension                         | [opampextension](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/v0.121.0/extension/opampextension/README.md)                               |
+| Health Check Extension                  | [healthcheckextension](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/v0.128.0/extension/healthcheckextension/README.md)                   |

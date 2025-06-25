@@ -153,11 +153,11 @@ See the table below for links to supported components
 
 | Component     |  Link                                                                                                  |
 |---------------|--------------------------------------------------------------------------------------------------------|
-| Receivers     | [Receiver List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/receivers.md)     |
-| Processors    | [Processor List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/processors.md)   |
-| Exporters     | [Exporter List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/exporters.md)     |
-| Extensions    | [Extensions List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/extensions.md)  |
-| Providers     | [Provider List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/providers.md)      |
+| Receivers     | [Receiver List](https://github.com/instana/instana-otel-collector/blob/main/docs/receivers.md)     |
+| Processors    | [Processor List](https://github.com/instana/instana-otel-collector/blob/main/docs/processors.md)   |
+| Exporters     | [Exporter List](https://github.com/instana/instana-otel-collector/blob/main/docs/exporters.md)     |
+| Extensions    | [Extensions List](https://github.com/instana/instana-otel-collector/blob/main/docs/extensions.md)  |
+| Providers     | [Provider List](https://github.com/instana/instana-otel-collector/blob/main/docs/providers.md)      |
 
 ## OpAmp Support
 

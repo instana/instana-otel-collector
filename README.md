@@ -40,11 +40,14 @@ chmod +x instana_otelcol_setup.sh
 Once this has been downloaded, the installer script can be run by
 
 ```bash
-./instana_otelcol_setup.sh -e <INSTANA_OTEL_ENDPOINT_GRPC> -a <INSTANA_KEY> [-H <INSTANA_OTEL_ENDPOINT_HTTP>] [<install_path>]
+./instana_otelcol_setup.sh -e <INSTANA_OTEL_ENDPOINT_GRPC> -a <INSTANA_KEY> [-H <INSTANA_OTEL_ENDPOINT_HTTP>] [-m INSTANA_METRICS_ENDPOINT] [-u USE_SUPERVISOR_SERVICE] [<install_path>]
 ```
 
 > [!NOTE] 
-> `INSTANA_OTEL_ENDPOINT_GRPC` and `INSTANA_KEY` are required parameters to run the installer
+> `INSTANA_OTEL_ENDPOINT_GRPC` and `INSTANA_KEY` are required parameters to run the installer.
+
+> [!NOTE] 
+> `USE_SUPERVISOR_SERVICE` is set as `true` by default, set to `false` if supervisor is undesired.
 
 The installation script will install and initiate the Instana Collector Service on your system using the parameters above.
 
@@ -78,6 +81,27 @@ service instana-collector stop # Stop collector service
 service instana-collector restart # Restart collector service
 
 service instana-collector status # Display status of collector service
+```
+
+#### Instana Supervisor Service
+
+> [!NOTE] 
+> If `USE_SUPERVISOR_SERVICE` is set as `false` during installation, skip this section.
+
+The `Instana Supervisor Service` works akin to the `Instana Collector Service` and supports the same commands, however does not support management through the `service` keyword.
+
+```bash
+./instana_supervisor_service.sh install # Will install the service (done automatically by installation script if false isn't specified for USE_SUPERVISOR_SERVICE)
+
+./instana_supervisor_service.sh uninstall # Uninstall the service (done automatically by uninstallation script)
+
+./instana_supervisor_service.sh status # Display the activity status of the supervisor service
+
+./instana_supervisor_service.sh start # Initiate the supervisor service
+
+./instana_supervisor_service.sh stop # Stop the supervisor service
+
+./instana_supervisor_service.sh restart # Restart the supervisor service
 ```
 
 ### Windows
@@ -129,11 +153,11 @@ See the table below for links to supported components
 
 | Component     |  Link                                                                                                  |
 |---------------|--------------------------------------------------------------------------------------------------------|
-| Receivers     | [Receiver List](https://github.com/instana/instana-otel-collector/blob/readme/docs/receivers.md)       |
-| Processors    | [Processor List](https://github.com/instana/instana-otel-collector/blob/readme/docs/processors.md)     |
-| Exporters     | [Exporter List](https://github.com/instana/instana-otel-collector/blob/readme/docs/exporters.md)       |
-| Extensions    | [Extensions List](https://github.com/instana/instana-otel-collector/blob/readme/docs/extensions.md)       |
-| Providers     | [Provider List](https://github.com/instana/instana-otel-collector/blob/readme/docs/providers.md)       |
+| Receivers     | [Receiver List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/receivers.md)     |
+| Processors    | [Processor List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/processors.md)   |
+| Exporters     | [Exporter List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/exporters.md)     |
+| Extensions    | [Extensions List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/extensions.md)  |
+| Providers     | [Provider List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/providers.md)      |
 
 ## OpAmp Support
 

@@ -3,7 +3,7 @@
 SCRIPT_PATH=$(readlink -f "$(dirname "$0")"/..)
 
 SERVICE_NAME="instana-collector"
-SERVICE_PATH="$SCRIPT_PATH/bin/instana-otelcol"
+SERVICE_PATH="$SCRIPT_PATH/bin/supervisor"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 
 install_service() {
@@ -13,15 +13,15 @@ install_service() {
 	# Create the systemd service file
 	cat <<EOF | sudo tee "$SERVICE_FILE"
 [Unit]
-Description=Instana Collector Service
+Description=Instana Collector Service (Supervisor)
 After=network.target
 
 [Service]
-ExecStart=$SERVICE_PATH --config config/config.yaml
+ExecStart=$SERVICE_PATH
 EnvironmentFile=$SCRIPT_PATH/config/config.env
 Restart=always
 User=root
-WorkingDirectory=$SCRIPT_PATH
+WorkingDirectory=$SCRIPT_PATH/bin
 
 [Install]
 WantedBy=multi-user.target

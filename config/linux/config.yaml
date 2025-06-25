@@ -17,6 +17,7 @@ receivers:
       paging:
       process:
       system:
+
 processors:
   batch: {}
   transform/severity_parse:
@@ -27,22 +28,36 @@ processors:
           - set(severity_text, "Warn") where IsMatch(body.string, ".*WARN.*")
           - set(severity_text, "Error") where IsMatch(body.string, ".*ERROR.*")
           - set(severity_text, "Fatal") where IsMatch(body.string, ".*FATAL.*")
+  filter: {}
+  tail_sampling: {}
+  probabilistic_sampler: {}
+  k8sattributes: {}
+  memory_limiter: 
+    check_interval: 1s
+    limit_mib: 512
+
+extensions:
+  health_check:
+    path: /health
+
 exporters:
-  debug:
-    verbosity: detailed
+  # debug:                # Logs all received spans, metrics, and logs at the debug level.
+  #   verbosity: detailed # Very useful for validating what the collector is receiving and sending.
+  #                       # If enabled be sure to add debug to the exporters map for pipelines (traces, metrics, logs) 
   otlp:
     endpoint: ${env:INSTANA_OTEL_ENDPOINT_GRPC:-localhost:4317}
     headers:
       x-instana-key: ${env:INSTANA_KEY:-instanalocal}
-      x-instana-host: ${env:INSTANA_HOST:-"yourhost.ibm.com"}
+      x-instana-host: ${env:HOSTNAME:-hostname}
     tls:
       insecure: true
+
 service:
   pipelines:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlp, debug]
+      exporters: [otlp]
     logs:
       receivers: [otlp, filelog]
       processors: [transform/severity_parse, batch]
@@ -50,10 +65,12 @@ service:
     metrics:
       receivers: [otlp, hostmetrics]
       processors: [batch]
-      exporters: [otlp, debug]
+      exporters: [otlp]
+  extensions: [health_check]
   telemetry:
     logs:
-      level: debug
+#       level: debug  # Enables verbose logging for the collector's internal operations.
+#                     # Useful when troubleshooting pipeline behavior or configuration issues.
       processors:
         - batch:
             exporter:
@@ -71,11 +88,8 @@ service:
                 endpoint: ${env:INSTANA_OTEL_ENDPOINT_HTTP:-http://localhost:8992}
                 headers:
                   x-instana-key: ${env:INSTANA_KEY:-instanalocal}
-#   extensions: [opamp]
-# extensions:
-#   opamp:
-#     server:
-#       ws:
-#         endpoint: ws://127.0.0.1:4320/v1/opamp
-#         tls:
-#           insecure_skip_verify: true
+    resource:
+      service.name: ${env:INSTANA_OTEL_SERVICE_NAME:-otel-collector}
+      service.version: ${env:INSTANA_OTEL_SERVICE_VERSION:-1.0.299}
+      service.instance.id: ${env:HOSTNAME:-hostname}
+      entity.type: ${env:INSTANA_OTEL_ENTITY_TYPE:-otel-collector}

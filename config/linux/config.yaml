@@ -3,7 +3,7 @@ receivers:
   otlp:
     protocols:
       grpc:
-        endpoint: localhost:24317 # By default port is opened locally
+        endpoint: localhost:24317 # By default only host system has access
   filelog:
     include: ["/var/log/*.log"]
     include_file_path: true

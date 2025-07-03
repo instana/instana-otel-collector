@@ -3,7 +3,7 @@ receivers:
   otlp:
     protocols:
       grpc:
-        endpoint: 0.0.0.0:24317
+        endpoint: localhost:24317 # By default only host system has access
   filelog:
     include: ["/var/log/*.log"]
     include_file_path: true

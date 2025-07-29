@@ -1,4 +1,4 @@
-module github.com/instana/instana-otel-collector/testbed
+module github.com/instana/instana-otel-collector
 
 go 1.23.7
 

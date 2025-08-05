@@ -68,13 +68,13 @@ func TestStratifiedProbabilisticSampling(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			traceCount := 100_000
 
-			sratifiedProbabilisticSampler := NewStratifiedProbabilisticSampler(componenttest.NewNopTelemetrySettings(), tt.hashSalt, tt.samplingPercentage)
+			stratifiedProbabilisticSampler := NewStratifiedProbabilisticSampler(componenttest.NewNopTelemetrySettings(), tt.hashSalt, tt.samplingPercentage)
 
 			sampled := 0
 			for _, traceID := range genStratifiedRandomTraceIDs(traceCount) {
 				trace := newTraceStringAttrs(nil, "example", "value")
 
-				decision, err := sratifiedProbabilisticSampler.Evaluate(context.Background(), traceID, trace)
+				decision, err := stratifiedProbabilisticSampler.Evaluate(context.Background(), traceID, trace)
 				assert.NoError(t, err)
 
 				if decision == Sampled {

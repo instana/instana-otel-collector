@@ -14,6 +14,7 @@ import (
 	"sort"
 	"strconv"
 	"sync"
+	"strings"
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -63,7 +64,7 @@ func NewStratifiedProbabilisticSampler(settings component.TelemetrySettings, has
 func (s *StratifiedProbabilisticSampler) Evaluate(_ context.Context, traceID pcommon.TraceID, traceData *TraceData) (Decision, error) {
 	s.logger.Debug("Evaluating spans in stratified probabilistic filter")
 	hash, _ := s.getTraceTrajectoryHash(traceData)
-	s.logger.Debug("Graph representation receieved", zap.String("Trace Identifier", traceID.String()), zap.String("Trace Hash", hash),)
+	s.logger.Debug("Graph representation recieved", zap.String("Trace Identifier", traceID.String()), zap.String("Trace Hash", hash),)
 
 	var count int
 	var exists bool
@@ -73,12 +74,12 @@ func (s *StratifiedProbabilisticSampler) Evaluate(_ context.Context, traceID pco
 	if exists {
 		// Trajectory exist. Update the count
 		s.traceTrajectoryCount[hash] = count + 1
-		s.logger.Debug("Trajectory exists", zap.String("Trace Hash", hash), zap.String("Check for Trace Identifier", traceID.String()), zap.String("TraceCount", string(count)))
+		s.logger.Debug("Trajectory exists", zap.String("Trace Hash", hash), zap.String("Check for Trace Identifier", traceID.String()), zap.Int("TraceCount", count))
 	} else {
 		// Trajectory is new for the interval
 		s.traceTrajectoryCount[hash] = 1
 		s.mu.Unlock()
-		s.logger.Debug("New Trajectory", zap.String("Trace Hash", hash), zap.String("Check for Trace Identifier", traceID.String()), zap.String("TraceCount", string(count)))
+		s.logger.Debug("New Trajectory", zap.String("Trace Hash", hash), zap.String("Check for Trace Identifier", traceID.String()), zap.Int("TraceCount", count))
 		return Sampled, nil
 	}
 	s.mu.Unlock()
@@ -93,7 +94,7 @@ func (s *StratifiedProbabilisticSampler) Evaluate(_ context.Context, traceID pco
 }
 
 func (s *StratifiedProbabilisticSampler) ResetWindow() {
-	s.logger.Debug("Inside ResetWindow")
+	s.logger.Debug("Resetting Evaluation Window")
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.logger.Debug("Trace trajectory count map", zap.Any("traceTrajectoryCount", s.traceTrajectoryCount))
@@ -165,13 +166,6 @@ func (s *StratifiedProbabilisticSampler) getTraceTrajectoryHash(traceData *Trace
 		})
 	}
 
-	// Serialize nodes with quoting to handle spaces/special chars
-	// nodeStrs := make([]string, len(sorted))
-	// for i, n := range sorted {
-	// 	nodeLabel := fmt.Sprintf("%s:%s", n.Service, n.Operation)
-	//	nodeStrs[i] = strconv.Quote(nodeLabel)
-	//}
-	//nodesStr := fmt.Sprintf("[%s]", joinWithComma(nodeStrs))
 
 	// Serialize edges deterministically with quoting
 	edgeStrs := make([]string, len(edges))
@@ -184,7 +178,6 @@ func (s *StratifiedProbabilisticSampler) getTraceTrajectoryHash(traceData *Trace
 	edgesStr := fmt.Sprintf("[%s]", joinWithComma(edgeStrs))
 
 	// Construct graph representation and hash it
-	//graphRepr := nodesStr + "|" + edgesStr
 	graphRepr := edgesStr
 	h := sha256.Sum256([]byte(graphRepr))
 	hash := hex.EncodeToString(h[:])
@@ -219,16 +212,11 @@ func compareString(a, b string) int {
 	return 0
 }
 
+
 func joinWithComma(items []string) string {
-	if len(items) == 0 {
-		return ""
-	}
-	out := items[0]
-	for i := 1; i < len(items); i++ {
-		out += "," + items[i]
-	}
-	return out
+	return strings.Join(items, ",")
 }
+
 
 func (s *StratifiedProbabilisticSampler) getTraceSpanDetails(traceData *TraceData) ([]Node, []Edge) {
 	s.logger.Debug("Extracting span details for the trace")
@@ -261,18 +249,10 @@ func (s *StratifiedProbabilisticSampler) getTraceSpanDetails(traceData *TraceDat
 				// traceID := span.TraceID().String()
 
 				node := Node{Service: serviceName, Operation: operationName}
-				s.logger.Debug("CHECK NODE NAME: ", zap.Any("node", node))
 				nodeSet[node] = struct{}{}
 				spanIDToNode[spanID] = node
 				spanIDToParentID[spanID] = parentSpanID
 
-				//s.logger.Debug("Parsed span",
-				//	zap.String("trace_id", traceID),
-				//	zap.String("span_id", spanID),
-				//	zap.String("parent_span_id", parentSpanID),
-				//	zap.String("operation_name", operationName),
-				//	zap.String("service_name", serviceName),
-				//)
 			}
 		}
 	}
@@ -288,8 +268,6 @@ func (s *StratifiedProbabilisticSampler) getTraceSpanDetails(traceData *TraceDat
 		} else {
 			parentNode = spanIDToNode[parentSpanID]
 		}
-		// s.logger.Debug("CHECK EDGE NAME: ", zap.Any("parent", parentNode), zap.Any("child", childNode))
-		// edges = append(edges, Edge{From: parentNode, To: childNode})
 		newEdge := Edge{From: parentNode, To: childNode}
 		edges = insertSortedEdge(edges, newEdge)
 	}
@@ -300,20 +278,6 @@ func (s *StratifiedProbabilisticSampler) getTraceSpanDetails(traceData *TraceDat
 		nodes = append(nodes, node)
 	}
 
-	//for _, node := range nodes {
-	//	s.logger.Debug("NODE DETAILS",
-	//		zap.String("service", node.Service),
-	//		zap.String("operation", node.Operation),
-	//	)
-	//}
-	//for _, edge := range edges {
-	//	s.logger.Debug("EDGE DETAILS",
-	//		zap.String("from_service", edge.From.Service),
-	//		zap.String("from_operation", edge.From.Operation),
-	//		zap.String("to_service", edge.To.Service),
-	//		zap.String("to_operation", edge.To.Operation),
-	//	)
-	//}
 	return nodes, edges
 }
 

@@ -15,6 +15,6 @@ entries:
     digest: 88d7888692d54f454277d91b83ceacc4754ac2c2acff026e7dc6df4f3338e7c6
     name: idot-chart
     urls:
-    - https://github.com/instana/instana-otel-collector/releases/latest/download/idot-chart-1.303.0.tgz
+    - https://github.com/instana/instana-otel-collector/releases/download/v0.9.9/instana-otel-collector-chart-latest.tgz
     version: 1.303.0
 generated: "2025-08-17T14:57:17.795335-07:00"

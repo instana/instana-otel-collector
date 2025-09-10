@@ -1,76 +1,163 @@
 ---
+# ===== Instana Distribution of OpenTelemetry Collector Configuration for Linux =====
+# This configuration file defines how the Instana Distribution of OpenTelemetry Collector
+# collects, processes, and exports telemetry data (traces, metrics, and logs).
+#
+# Documentation: https://opentelemetry.io/docs/collector/configuration/
+# Instana Documentation: https://www.ibm.com/docs/en/instana-observability/current
+
+# ===== EXTENSIONS =====
+# Extensions provide capabilities that can be added to the collector
+# but are not related to data processing.
+extensions:
+  # Health check extension - provides an HTTP endpoint for health monitoring
+  health_check:
+    # The endpoint path for health checks
+    path: /health
+
+# ===== RECEIVERS =====
+# Receivers collect data from various sources and convert it into
+# the collector's internal format for further processing.
 receivers:
-  otlp:
+  # OpenTelemetry Protocol (OTLP) receiver
+  # Collects telemetry data from applications instrumented with OpenTelemetry
+  otlp/receiver:
     protocols:
       grpc:
-        endpoint: localhost:24317 # By default only host system has access
-  filelog:
-    include: ["/var/log/*.log"]
-    include_file_path: true
-  hostmetrics:
-    collection_interval: 1m
-    scrapers:
-      load:
-      filesystem:
-      memory:
-      network:
-      paging:
-      process:
-      system:
+        endpoint: localhost:24317    # Only accessible from the host system by default
 
+  # File log receiver
+  # Collects logs from files on the local filesystem
+  filelog:
+    include: ["/var/log/*.log"]      # Pattern for log files to collect
+    include_file_path: true          # Include the file path in the log metadata
+
+  # Host metrics receiver
+  # Collects system-level metrics from the host machine
+  hostmetrics:
+    collection_interval: 1m          # How frequently to collect metrics
+    scrapers:
+      load:                          # System load average metrics
+      filesystem:                    # Disk usage and filesystem metrics
+      memory:                        # Memory usage metrics
+      network:                       # Network I/O metrics
+      paging:                        # Memory paging/swap metrics
+      process:                       # Per-process metrics
+        mute_process_exe_error: true # Suppress errors when process executables can't be accessed
+      system:                        # General system metrics (CPU, uptime, etc.)
+
+# ===== PROCESSORS =====
+# Processors transform, filter, or enrich the data as it passes through the collector.
 processors:
-  batch: {}
+  # Memory limiter - prevents the collector from consuming too much memory
+  # Commented out by default - enable if you need to limit memory usage
+  # memory_limiter:
+  #   check_interval: 1s             # How often to check memory usage
+  #   limit_mib: 512                 # Maximum memory usage in MiB
+
+  # Batch processor - groups data into batches for more efficient export
+  batch: {}                          # Using default settings
+
+  # Transform processor - parses log severity levels from text
   transform/severity_parse:
     log_statements:
       - context: log
         statements:
-          - set(severity_text, "Info") where IsMatch(body.string, ".*INFO.*")
-          - set(severity_text, "Warn") where IsMatch(body.string, ".*WARN.*")
+          # Map common log level patterns to standardized severity text
+          - set(severity_text, "Info")  where IsMatch(body.string, ".*INFO.*")
+          - set(severity_text, "Warn")  where IsMatch(body.string, ".*WARN.*")
           - set(severity_text, "Error") where IsMatch(body.string, ".*ERROR.*")
           - set(severity_text, "Fatal") where IsMatch(body.string, ".*FATAL.*")
-  filter: {}
-  tail_sampling: {}
-  probabilistic_sampler: {}
-  k8sattributes: {}
-  memory_limiter: 
-    check_interval: 1s
-    limit_mib: 512
 
-extensions:
-  health_check:
-    path: /health
+  # Resource processor - adds resource attributes to telemetry data
+  resource/collector:
+    attributes:
+      # Service name for the collector
+      - key: service.name
+        value: ${env:INSTANA_OTEL_SERVICE_NAME:-otel-collector}
+        action: upsert
+      # Instance ID for the collector
+      - key: service.instance.id
+        value: ${env:HOSTNAME:-hostname}
+        action: upsert
+      # Entity type for Instana backend
+      - key: entity.type
+        value: ${env:INSTANA_OTEL_ENTITY_TYPE:-otel-collector}
+        action: upsert
 
+  # Additional processors (configured with empty settings for now)
+  filter: {}                         # Filters out unwanted data
+  tail_sampling: {}                  # Samples traces based on their content
+  probabilistic_sampler: {}          # Samples data based on probability
+  k8sattributes: {}                  # Enriches data with Kubernetes metadata
+
+# ===== EXPORTERS =====
+# Exporters send the collected and processed data to various destinations.
 exporters:
-  # debug:                # Logs all received spans, metrics, and logs at the debug level.
-  #   verbosity: detailed # Very useful for validating what the collector is receiving and sending.
-  #                       # If enabled be sure to add debug to the exporters map for pipelines (traces, metrics, logs) 
-  otlp:
+  # Debug exporter (commented out by default)
+  # Useful for development and troubleshooting
+  # debug:
+  #   verbosity: detailed            # Shows detailed information about the data
+  #   # If enabled, add 'debug' to the exporters list in each pipeline
+
+  # OTLP exporter - sends data to Instana backend
+  otlp/exporter:
+    # The endpoint to send data to (from environment variable or default)
     endpoint: ${env:INSTANA_OTEL_ENDPOINT_GRPC:-localhost:4317}
+    # Headers for authentication and identification with Instana
     headers:
       x-instana-key: ${env:INSTANA_KEY:-instanalocal}
       x-instana-host: ${env:HOSTNAME:-hostname}
-    tls:
-      insecure: true
 
+# ===== SERVICE =====
+# The service section defines how all the components are connected together.
 service:
-  pipelines:
-    traces:
-      receivers: [otlp]
-      processors: [batch]
-      exporters: [otlp]
-    logs:
-      receivers: [otlp, filelog]
-      processors: [transform/severity_parse, batch]
-      exporters: [otlp]
-    metrics:
-      receivers: [otlp, hostmetrics]
-      processors: [batch]
-      exporters: [otlp]
+  # List of extensions to enable
   extensions: [health_check]
+  
+  # Data processing pipelines
+  pipelines:
+    # ===== OTLP Pipeline =====
+    # These pipelines handle data received via OTLP protocol from instrumented applications
+    
+    # Trace data pipeline for OTLP data
+    traces/otlp:
+      receivers: [otlp/receiver]                      # Collect traces from OTLP receiver
+      processors: [batch]                             # Process traces with batching
+      exporters: [otlp/exporter]                      # Send traces to Instana backend
+
+    # Log data pipeline for OTLP data
+    logs/otlp:
+      receivers: [otlp/receiver]                      # Collect logs from OTLP receiver
+      processors: [transform/severity_parse, batch]   # Process logs with severity parsing
+      exporters: [otlp/exporter]                      # Send logs to Instana backend
+
+    # Metrics data pipeline for OTLP data
+    metrics/otlp:
+      receivers: [otlp/receiver]                      # Collect metrics from OTLP receiver
+      processors: [batch]                             # Process metrics with batching
+      exporters: [otlp/exporter]                      # Send metrics to Instana backend
+      
+    # ===== COLLECTOR Pipeline =====
+    # These pipelines handle data collected directly by the collector from the host system
+
+    # Log data pipeline for system logs
+    logs/collector:
+      receivers: [filelog]                                              # Collect logs from files
+      processors: [resource/collector, transform/severity_parse, batch] # Add collector identity
+      exporters: [otlp/exporter]                                        # Send logs to Instana backend
+
+    # Metrics data pipeline for system metrics
+    metrics/collector:
+      receivers: [hostmetrics]                        # Collect metrics from host
+      processors: [resource/collector, batch]         # Add collector identity
+      exporters: [otlp/exporter]                      # Send metrics to Instana backend
+
+  # Collector's own telemetry configuration (self-monitoring)
   telemetry:
+    # Log telemetry configuration
     logs:
-#       level: debug  # Enables verbose logging for the collector's internal operations.
-#                     # Useful when troubleshooting pipeline behavior or configuration issues.
+      level: ${env:INSTANA_OTEL_LOG_LEVEL:-info} # debug or info, warn, error
       processors:
         - batch:
             exporter:
@@ -79,6 +166,8 @@ service:
                 endpoint: ${env:INSTANA_OTEL_ENDPOINT_HTTP:-http://localhost:8992}
                 headers:
                   x-instana-key: ${env:INSTANA_KEY:-instanalocal}
+    
+    # Metrics telemetry configuration
     metrics:
       readers:
         - periodic:
@@ -88,8 +177,11 @@ service:
                 endpoint: ${env:INSTANA_OTEL_ENDPOINT_HTTP:-http://localhost:8992}
                 headers:
                   x-instana-key: ${env:INSTANA_KEY:-instanalocal}
+    
+    # Resource attributes for identifying the collector itself
     resource:
       service.name: ${env:INSTANA_OTEL_SERVICE_NAME:-otel-collector}
-      service.version: ${env:INSTANA_OTEL_SERVICE_VERSION:-1.0.299}
+      service.version: ${env:INSTANA_OTEL_SERVICE_VERSION:-1.305.0}
       service.instance.id: ${env:HOSTNAME:-hostname}
       entity.type: ${env:INSTANA_OTEL_ENTITY_TYPE:-otel-collector}
+      log.level: ${env:INSTANA_OTEL_LOG_LEVEL:-info}

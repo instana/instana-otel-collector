@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "This schema defines the configuration values for the IDOT Helm chart. It validates the structure and required fields for proper deployment.",
+  "type": "object",
+  "properties": {
+    "instanaKey": {
+      "type": "string",
+      "description": "x-instana-key: The Instana agent key to use; only needed to send telemetry data to Instana Backend."
+    },
+    "instanaEndpoint": {
+      "type": "string",
+      "description": "The Instana backend/agent endpoint.",
+      "format": "uri"
+    },
+    "clusterShortName": {
+      "type": "string",
+      "description": "k8s.cluster.shortName: Short name of the cluster."
+    },
+    "clusterName": {
+      "type": "string",
+      "description": "k8s.cluster.name: Name for the Kubernetes cluster."
+    },
+    "clusterFullName": {
+      "type": "string",
+      "description": "k8s.cluster.fullName: Full name of the cluster."
+    },
+    "clusterDistribution": {
+      "type": "string",
+      "description": "k8s.cluster.distribution: Name of the cluster distribution."
+    },
+    "clusterManagedBy": {
+      "type": "string",
+      "description": "k8s.cluster.managedBy: Name of the organization managing the cluster."
+    },
+    "clusterVersion": {
+      "type": "string",
+      "description": "k8s.cluster.version: Version of the cluster."
+    },
+    "namespaceName": {
+      "type": "string",
+      "description": "k8s.namespace.name: Namespace of the Kubernetes cluster."
+    },
+    "serviceInstanceId": {
+      "type": "string",
+      "description": "service.instance.id: Service instance ID for tracing."
+    },
+    "serviceName": {
+      "type": "string",
+      "description": "service.name: Service name for use in tracing."
+    },
+    "INSTANA_PLUGIN": {
+      "type": "string",
+      "description": "INSTANA_PLUGIN: Mandatory constant for use internally by Instana."
+    },
+    "daemonset": {
+      "type": "object",
+      "description": "Configuration for the daemonset deployment"
+    },
+    "statefulset": {
+      "type": "object",
+      "description": "Configuration for the statefulset deployment"
+    },
+    "openshift": {
+      "type": "object",
+      "description": "OpenShift-specific configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Force OpenShift mode even if not auto-detected"
+        },
+        "autoDetect": {
+          "type": "boolean",
+          "description": "Automatically detect if running on OpenShift"
+        },
+        "daemonset": {
+          "type": "object",
+          "description": "OpenShift configuration for DaemonSet collector",
+          "properties": {
+            "usePrivilegedServiceAccount": {
+              "type": "boolean",
+              "description": "When true and running on OpenShift, use a custom service account with privileged SCC"
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "instanaKey",
+    "instanaEndpoint",
+    "clusterName",
+    "daemonset",
+    "statefulset"
+  ],
+  "additionalProperties": false
+}

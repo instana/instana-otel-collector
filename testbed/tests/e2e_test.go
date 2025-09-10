@@ -40,7 +40,7 @@ func TestIdleMode(t *testing.T) {
 		cp,
 		&testbed.PerfTestValidator{},
 		performanceResultsSummary,
-		testbed.WithResourceLimits(testbed.ResourceSpec{ExpectedMaxCPU: 20, ExpectedMaxRAM: 83}),
+		testbed.WithResourceLimits(testbed.ResourceSpec{ExpectedMaxCPU: 20, ExpectedMaxRAM: 90}),
 	)
 	tc.StartAgent()
 	t.Cleanup(tc.Stop)

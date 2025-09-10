@@ -4,17 +4,17 @@ entries:
   - annotations:
       category: Monitoring
     apiVersion: v2
-    appVersion: 0.9.9
+    appVersion: 1.305.0
     created: "2025-08-23T17:55:37.411255-07:00"
     dependencies:
     - alias: daemonset
       name: opentelemetry-collector
       repository: https://open-telemetry.github.io/opentelemetry-helm-charts
-      version: 0.130.2
+      version: 0.133.0
     - alias: statefulset
       name: opentelemetry-collector
       repository: https://open-telemetry.github.io/opentelemetry-helm-charts
-      version: 0.130.2
+      version: 0.133.0
     description: 'Instana''s Distributed OpenTelemetry (IDOT) chart for Kubernetes
       monitoring. Deploys OpenTelemetry collectors in both DaemonSet and StatefulSet
       modes to collect metrics, traces, and logs from Kubernetes clusters. '
@@ -35,6 +35,6 @@ entries:
     name: instana-otel-collector-chart
     type: application
     urls:
-    - https://github.com/instana/instana-otel-collector/releases/download/v0.9.9/instana-otel-collector-chart-latest.tgz
-    version: 0.9.9
+    - https://github.com/instana/instana-otel-collector/releases/download/v1.305.0/instana-otel-collector-chart-latest.tgz
+    version: 1.305.0
 generated: "2025-08-23T17:55:37.409021-07:00"

@@ -98,5 +98,3 @@ exporters:
 # Use local versions of components instead of the published ones
 replaces:
   - github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor => ../../processor/tailsamplingprocessor
-
-# Made with Bob

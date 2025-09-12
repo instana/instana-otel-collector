@@ -91,7 +91,7 @@ kubectl describe pod -n instana-collector <NAME_OF_DEPLOYMENT>
 To uninstall the Helm chart:
 
 ```bash
-helm uninstall idot -n instana-collector
+helm uninstall instana-otel-collector
 ```
 
 To completely remove all resources, including the namespace:
@@ -158,7 +158,7 @@ For OpenShift clusters, the chart automatically creates a privileged ServiceAcco
 Run the uninstall Helm chart command:
 
 ```bash
-helm uninstall idot -n instana-collector
+helm uninstall instana-otel-collector
 ```
 
 To delete the project from OpenShift cluster:

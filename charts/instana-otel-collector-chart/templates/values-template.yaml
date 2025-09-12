@@ -1,0 +1,53 @@
+# IDOT Values Template
+# This template creates a ConfigMap that provides environment variables for the OpenTelemetry collectors
+# The ConfigMap is used by both the DaemonSet and StatefulSet deployments
+
+# Kubernetes ConfigMap definition
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: idot-env-config  # This ConfigMap is referenced in the values.yaml by both collector deployments
+data:
+  # OTEL_RESOURCE_ATTRIBUTES defines resource attributes that will be attached to all telemetry data
+  # These attributes help identify and categorize the source of telemetry data in Instana
+  OTEL_RESOURCE_ATTRIBUTES: {{- $attrs := list -}}
+    {{- $attrs = append $attrs (printf "k8s.cluster.name=%s" .Values.clusterName) -}}
+    {{- if .Values.clusterShortName }}
+      {{- $attrs = append $attrs (printf "k8s.cluster.shortName=%s" .Values.clusterShortName) -}}
+    {{- end }}
+    {{- if .Values.clusterFullName }}
+      {{- $attrs = append $attrs (printf "k8s.cluster.fullName=%s" .Values.clusterFullName) -}}
+    {{- end }}
+    {{- if .Values.clusterVersion }}
+      {{- $attrs = append $attrs (printf "k8s.cluster.version=%s" .Values.clusterVersion) -}}
+    {{- end }}
+    {{- if .Values.clusterDistribution }}
+      {{- $attrs = append $attrs (printf "k8s.cluster.distribution=%s" .Values.clusterDistribution) -}}
+    {{- end }}
+    {{- if .Values.clusterManagedBy }}
+      {{- $attrs = append $attrs (printf "k8s.cluster.managedBy=%s" .Values.clusterManagedBy) -}}
+    {{- end }}
+    {{- if .Values.namespaceName }}
+      {{- $attrs = append $attrs (printf "k8s.namespace.name=%s" .Values.namespaceName) -}}
+    {{- end }}
+    {{- if .Values.serviceInstanceId }}
+      {{- $attrs = append $attrs (printf "service.instance.id=%s" .Values.serviceInstanceId) -}}
+    {{- end }}
+    {{- if .Values.serviceName }}
+      {{- $attrs = append $attrs (printf "service.name=%s" .Values.serviceName) -}}
+    {{- end }}
+    {{- if .Values.INSTANA_PLUGIN }}
+      {{- $attrs = append $attrs (printf "INSTANA_PLUGIN=%s" .Values.INSTANA_PLUGIN) -}}
+    {{- end }}
+    {{ $attrs | uniq | join "," | quote }}
+
+  # Instana backend endpoint for sending telemetry data
+  # This is used by the OTLP exporters in both collectors
+  INSTANA_ENDPOINT: {{ .Values.instanaEndpoint | quote }}
+
+  # Instana agent key for authentication with the Instana backend
+  # This is passed as a header (x-instana-key) in OTLP export requests
+  INSTANA_KEY: {{ .Values.instanaKey | quote }}
+
+  # Helm chart AppVersion injected as environment variable for OTEL service version
+  INSTANA_OTEL_SERVICE_VERSION: {{ .Chart.AppVersion | quote }}

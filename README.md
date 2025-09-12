@@ -43,11 +43,18 @@ Once this has been downloaded, the installer script can be run by
 ./instana_otelcol_setup.sh -e <INSTANA_OTEL_ENDPOINT_GRPC> -a <INSTANA_KEY> [-H <INSTANA_OTEL_ENDPOINT_HTTP>] [-m INSTANA_METRICS_ENDPOINT] [-u USE_SUPERVISOR_SERVICE] [<install_path>]
 ```
 
+```bash
+<INSTANA_OTEL_ENDPOINT_GRPC> # GRPC Endpoint for Instana. Format <ip_address>:<port>
+<INSTANA_KEY> # Key for authentication into Instana
+<INSTANA_OTEL_ENDPOINT_HTTP> # HTTP Endpoint for Instana. Format <ip_address>:<port>
+<INSTANA_METRICS_ENDPOINT> # Endpoint for sending collector metrics to. Format <ip_address>:<port>
+<USE_SUPERVISOR_SERVICE> # Set as true by default to enable the collector supervisor feature, false will leave the supervisor disabled.
+
+```
+
 > [!NOTE] 
 > `INSTANA_OTEL_ENDPOINT_GRPC` and `INSTANA_KEY` are required parameters to run the installer.
 
-> [!NOTE] 
-> `USE_SUPERVISOR_SERVICE` is set as `true` by default, set to `false` if supervisor is undesired.
 
 The installation script will install and initiate the Instana Collector Service on your system using the parameters above.
 
@@ -104,6 +111,10 @@ The `Instana Supervisor Service` works akin to the `Instana Collector Service` a
 ./instana_supervisor_service.sh restart # Restart the supervisor service
 ```
 
+### Kubernetes 
+
+Visit [Kubernetes Deployment Guide](docs/k8s.md) for more information.
+
 ### Windows
 
 Coming soon...
@@ -153,15 +164,19 @@ See the table below for links to supported components
 
 | Component     |  Link                                                                                                  |
 |---------------|--------------------------------------------------------------------------------------------------------|
-| Receivers     | [Receiver List](https://github.com/instana/instana-otel-collector/blob/main/docs/receivers.md)     |
-| Processors    | [Processor List](https://github.com/instana/instana-otel-collector/blob/main/docs/processors.md)   |
-| Exporters     | [Exporter List](https://github.com/instana/instana-otel-collector/blob/main/docs/exporters.md)     |
-| Extensions    | [Extensions List](https://github.com/instana/instana-otel-collector/blob/main/docs/extensions.md)  |
-| Providers     | [Provider List](https://github.com/instana/instana-otel-collector/blob/main/docs/providers.md)      |
+| Receivers     | [Receiver List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/receivers.md)     |
+| Processors    | [Processor List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/processors.md)   |
+| Exporters     | [Exporter List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/exporters.md)     |
+| Extensions    | [Extensions List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/extensions.md)  |
+| Providers     | [Provider List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/providers.md)      |
 
 ## OpAmp Support
 
 Coming soon...
+
+## Troubleshooting
+
+For common issues and their solutions, please refer to our [troubleshooting guide](docs/troubleshooting.md). This guide covers installation problems, connectivity issues, and platform-specific troubleshooting steps.
 
 ## Uninstallation
 

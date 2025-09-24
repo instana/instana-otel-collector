@@ -163,7 +163,7 @@ service:
             exporter:
               otlp:
                 protocol: http/protobuf
-                endpoint: ${env:INSTANA_OTEL_ENDPOINT_HTTP:-http://localhost:8992}
+                endpoint: ${env:INSTANA_OTEL_ENDPOINT_HTTP}
                 headers:
                   x-instana-key: ${env:INSTANA_KEY:-instanalocal}
     
@@ -174,7 +174,7 @@ service:
             exporter:
               otlp:
                 protocol: http/protobuf
-                endpoint: ${env:INSTANA_OTEL_ENDPOINT_HTTP:-http://localhost:8992}
+                endpoint: ${env:INSTANA_OTEL_ENDPOINT_HTTP}
                 headers:
                   x-instana-key: ${env:INSTANA_KEY:-instanalocal}
     

@@ -40,7 +40,7 @@ entries:
   - annotations:
       category: Monitoring
     apiVersion: v2
-    appVersion: 1.306.0
+    appVersion: 1.306.0-rc.1
     created: "2025-08-23T17:55:37.411255-07:00"
     dependencies:
     - alias: daemonset
@@ -72,5 +72,5 @@ entries:
     type: application
     urls:
     - https://github.com/instana/instana-otel-collector/releases/download/v1.306.0/instana-otel-collector-chart-latest.tgz
-    version: 1.306.0-rc.1,
+    version: 1.306.0-rc.1
 generated: "2025-08-23T17:55:37.409021-07:00"

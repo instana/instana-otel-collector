@@ -72,5 +72,5 @@ entries:
     type: application
     urls:
     - https://github.com/instana/instana-otel-collector/releases/download/v1.306.0/instana-otel-collector-chart-latest.tgz
-    version: 1.306.0
+    version: 1.306.0-rc.1,
 generated: "2025-08-23T17:55:37.409021-07:00"

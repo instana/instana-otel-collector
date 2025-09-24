@@ -38,6 +38,15 @@ This document provides solutions for common issues encountered when using the In
 - **Issue**: Supervisor service fails to start
   - **Solution**: Verify that the supervisor configuration in `config.env` is correct and check system logs for any errors.
 
+### Self-signed Certificate Issues in Self-hosted Environments
+
+- **Issue**: Collector cannot connect to Instana backend due to certificate validation failures in self-hosted environments with self-signed certificates
+  - **Solution**: Export the certificate from your Instana server and add it to your system's trusted certificate store:
+    1. Export the PEM file from the Instana server
+    2. Convert it to a .crt file if necessary
+    3. Add the certificate to your system's trusted certificate store i.e copy your .crt file to /usr/share/pki/ca-trust-source/anchors/ for RHEL/CentOS/Fedora or /usr/local/share/ca-certificates/ for Debian/Ubuntu.
+    4. Restart the collector service
+
 
 ## Linux Issues
 

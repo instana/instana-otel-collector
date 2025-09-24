@@ -27,38 +27,58 @@ Visit the [IBM OpenTelemetry Documentation](https://www.ibm.com/docs/en/instana-
 
 ## Getting Started
 
-### Linux
+#### Supported Architectures
 
-On Linux machines, setup up can be done by downloading the latest release of the installer via the command:
+The Instana Distribution of OpenTelemetry Collector supports the following architectures:
 
+| OS      | Architectures                 |
+|---------|-------------------------------|
+| Linux   | x86-64 (amd64), s390x (IBM Z) |
+
+### Linux Installation
+
+The installation process is identical for both supported Linux architectures (amd64 and s390x/IBM Z). The only difference is the installer script you need to download.
+
+#### Step 1: Download the appropriate installer for your architecture
+
+**For x86-64/amd64 systems:**
 ```bash
-curl -Lo instana_otelcol_setup.sh https://github.com/instana/instana-otel-collector/releases/latest/download/instana-collector-installer-latest.sh
-
+curl -Lo instana_otelcol_setup.sh https://github.com/instana/instana-otel-collector/releases/latest/download/instana-otel-collector-installer-latest-linux-amd64.sh
 chmod +x instana_otelcol_setup.sh
 ```
 
-Once this has been downloaded, the installer script can be run by
+**For s390x/zLinux systems:**
+```bash
+curl -Lo instana_otelcol_setup.sh https://github.com/instana/instana-otel-collector/releases/latest/download/instana-otel-collector-installer-latest-linux-s390x.sh
+chmod +x instana_otelcol_setup.sh
+```
+
+#### Step 2: Run the installer
+
+The installation command as follows:
 
 ```bash
 ./instana_otelcol_setup.sh -e <INSTANA_OTEL_ENDPOINT_GRPC> -a <INSTANA_KEY> [-H <INSTANA_OTEL_ENDPOINT_HTTP>] [-m INSTANA_METRICS_ENDPOINT] [-u USE_SUPERVISOR_SERVICE] [<install_path>]
 ```
 
-```bash
+Where:
+```
 <INSTANA_OTEL_ENDPOINT_GRPC> # GRPC Endpoint for Instana. Format <ip_address>:<port>
-<INSTANA_KEY> # Key for authentication into Instana
+<INSTANA_KEY>                # Key for authentication into Instana
 <INSTANA_OTEL_ENDPOINT_HTTP> # HTTP Endpoint for Instana. Format <ip_address>:<port>
-<INSTANA_METRICS_ENDPOINT> # Endpoint for sending collector metrics to. Format <ip_address>:<port>
-<USE_SUPERVISOR_SERVICE> # Set as true by default to enable the collector supervisor feature, false will leave the supervisor disabled.
-
+<INSTANA_METRICS_ENDPOINT>   # Endpoint for sending collector metrics to. Format <ip_address>:<port>
+<USE_SUPERVISOR_SERVICE>     # Set as true by default to enable the collector supervisor feature, false will leave the supervisor disabled.
 ```
 
 > [!NOTE] 
 > `INSTANA_OTEL_ENDPOINT_GRPC` and `INSTANA_KEY` are required parameters to run the installer.
 
+> [!NOTE]
+> When installing on SLES for IBM Z, ensure you have the necessary dependencies installed for the collector to run properly.
 
 The installation script will install and initiate the Instana Collector Service on your system using the parameters above.
 
-These paramaters can be changed later in the `config.env` file found under `install_path` (default is `/opt/instana/collector/config/config.env`)
+These paramaters can be changed later in the `config.env` file found under `install_path/collector/config/config.env` (default is `/opt/instana/collector/config/config.env`)
 
 #### Instana Collector Service
 

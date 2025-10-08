@@ -40,7 +40,7 @@ entries:
   - annotations:
       category: Monitoring
     apiVersion: v2
-    appVersion: 1.306.0-rc.1
+    appVersion: 1.306.0
     created: "2025-08-23T17:55:37.411255-07:00"
     dependencies:
     - alias: daemonset

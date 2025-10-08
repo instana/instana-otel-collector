@@ -206,6 +206,18 @@ daemonset:
           exporters:
           # - debug
           - otlp/instana
+        traces:
+          receivers:
+          - otlp
+          exporters:
+          # - debug
+          - otlp/instana
+          processors:
+          - resourcedetection/env # Adds environment resource attributes first
+          - k8sattributes         # Enriches telemetry with Kubernetes metadata
+          - memory_limiter        # Protects collector from memory spikes
+          - transform/resource_adjustments
+          - batch                 # Batches traces for efficient export
       # Collector's own telemetry configuration (self-monitoring)
       telemetry:
         # Metrics telemetry configuration
@@ -368,6 +380,18 @@ statefulset:
           exporters:
           # - debug
           - otlp/instana
+        traces:
+          receivers:
+          - otlp
+          exporters:
+          # - debug
+          - otlp/instana
+          processors:
+          - resourcedetection/env # Adds environment resource attributes first
+          - k8sattributes         # Enriches telemetry with Kubernetes metadata
+          - memory_limiter        # Protects collector from memory spikes
+          - transform/resource_adjustments
+          - batch                 # Batches traces for efficient export
       # Collector's own telemetry configuration (self-monitoring)
       telemetry:
         # Metrics telemetry configuration

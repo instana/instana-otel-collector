@@ -58,7 +58,7 @@ chmod +x instana_otelcol_setup.sh
 The installation command as follows:
 
 ```bash
-./instana_otelcol_setup.sh -e <INSTANA_OTEL_ENDPOINT_GRPC> -a <INSTANA_KEY> [-H <INSTANA_OTEL_ENDPOINT_HTTP>] [-m INSTANA_METRICS_ENDPOINT] [-u USE_SUPERVISOR_SERVICE] [<install_path>]
+./instana_otelcol_setup.sh -e <INSTANA_OTEL_ENDPOINT_GRPC> -a <INSTANA_KEY> [-H <INSTANA_OTEL_ENDPOINT_HTTP>] [-u USE_SUPERVISOR_SERVICE] [<install_path>]
 ```
 
 Where:
@@ -66,7 +66,6 @@ Where:
 <INSTANA_OTEL_ENDPOINT_GRPC> # GRPC Endpoint for Instana. Format <ip_address>:<port>
 <INSTANA_KEY>                # Key for authentication into Instana
 <INSTANA_OTEL_ENDPOINT_HTTP> # HTTP Endpoint for Instana. Format <ip_address>:<port>
-<INSTANA_METRICS_ENDPOINT>   # Endpoint for sending collector metrics to. Format <ip_address>:<port>
 <USE_SUPERVISOR_SERVICE>     # Set as true by default to enable the collector supervisor feature, false will leave the supervisor disabled.
 ```
 

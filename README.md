@@ -1,7 +1,7 @@
 # Instana Distribution of OpenTelemetry Collector
 
 <!-- Instana Logo -->
-<a href="https://www.ibm.com/products/instana">
+<a href="https://www.com/products/instana">
     <p align="center">
         <img src="docs/assets/instana-logo.png">
     </p>
@@ -23,7 +23,7 @@ The **Instana Distibution of OpenTelemetry Collector** (IDOT) aims to bring a st
 
 IDOT was built using the builder found on the [OpenTelemetry GitHub](https://github.com/open-telemetry/opentelemetry-collector) and follows the documentation found on the official [OpenTelemetry Website](https://opentelemetry.io/).
 
-Visit the [IBM OpenTelemetry Documentation](https://www.ibm.com/docs/en/instana-observability/current?topic=apis-opentelemetry) page to learn more about Instana-OpenTelemetry synergy.
+Visit the [IBM OpenTelemetry Documentation](https://www.com/docs/en/instana-observability/current?topic=apis-opentelemetry) page to learn more about Instana-OpenTelemetry synergy.
 
 ## Getting Started
 
@@ -184,11 +184,11 @@ See the table below for links to supported components
 
 | Component     |  Link                                                                                                  |
 |---------------|--------------------------------------------------------------------------------------------------------|
-| Receivers     | [Receiver List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/receivers.md)     |
-| Processors    | [Processor List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/processors.md)   |
-| Exporters     | [Exporter List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/exporters.md)     |
-| Extensions    | [Extensions List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/extensions.md)  |
-| Providers     | [Provider List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/providers.md)      |
+| Receivers     | [Receiver List](https://github.com/instana/instana-otel-collector/blob/main/docs/receivers.md)     |
+| Processors    | [Processor List](https://github.com/instana/instana-otel-collector/blob/main/docs/processors.md)   |
+| Exporters     | [Exporter List](https://github.com/instana/instana-otel-collector/blob/main/docs/exporters.md)     |
+| Extensions    | [Extensions List](https://github.com/instana/instana-otel-collector/blob/main/docs/extensions.md)  |
+| Providers     | [Provider List](https://github.com/instana/instana-otel-collector/blob/main/docs/providers.md)      |
 
 ## OpAmp Support
 

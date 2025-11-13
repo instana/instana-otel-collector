@@ -1,0 +1,156 @@
+type: spanintent
+
+status:
+  class: processor
+  stability:
+    beta: [traces]
+  distributions: [contrib, k8s]
+
+
+tests:
+  config:
+
+attributes:
+  sampling_category:
+    description: The category of the sampling decision (e.g., head, tail, etc.).
+    type: string
+
+  error_type:
+    description: The type of error encountered during processing.
+    type: string
+
+  classification_category:
+    description: The classification category assigned to the trace (e.g., critical, normal, etc.).
+    type: string
+
+telemetry:
+  metrics:
+    processor_spanintent_processing_duration:
+      description: Duration of the span intent processor's main processing loop (processBufferedSpans).
+      unit: ms
+      enabled: true
+      histogram:
+        value_type: double
+        
+    processor_spanintent_sampling_decision_latency:
+      description: Latency of making a sampling decision for a single trace.
+      unit: us
+      enabled: true
+      histogram:
+        value_type: double
+ 
+    processor_spanintent_spans_received:
+      description: Number of spans received by the span intent processor.
+      unit: "{spans}"
+      enabled: true
+      sum:
+        value_type: int
+        monotonic: true
+        aggregation: cumulative
+
+    processor_spanintent_new_trace_id_received:
+      description: Number of new unique trace IDs received by the span intent processor.
+      unit: "{traces}"
+      enabled: true
+      sum:
+        value_type: int
+        monotonic: true
+        aggregation: cumulative
+
+    processor_spanintent_traces_processed:
+      description: Number of traces processed by the span intent processor.
+      unit: "{traces}"
+      enabled: true
+      sum:
+        value_type: int
+        monotonic: true
+        aggregation: cumulative
+
+    processor_spanintent_traces_classified_total:
+      description: Total number of traces classified by intent.
+      unit: "{traces}"
+      enabled: true
+      sum:
+        value_type: int
+        monotonic: true
+        aggregation: cumulative
+      attributes:
+        - classification_category # "normal", "degraded", "failed"
+
+    processor_spanintent_traces_sampled:
+      description: Number of traces sampled by the span intent processor.
+      unit: "{traces}"
+      enabled: true
+      sum:
+        value_type: int
+        monotonic: true
+        aggregation: cumulative
+      attributes:
+        - sampling_category # "normal", "degraded", "failed"
+
+    processor_spanintent_traces_unsampled:
+      description: Number of traces unsampled by the span intent processor.
+      unit: "{traces}"
+      enabled: true
+      sum:
+        value_type: int
+        monotonic: true
+        aggregation: cumulative
+      attributes:
+        - sampling_category # "normal", "degraded", "failed"
+
+    processor_spanintent_sampled_cache_hits:
+      description: Number of hits in the sampled traces cache.
+      unit: "{spans}"
+      enabled: true
+      sum:
+        value_type: int
+        monotonic: true
+        aggregation: cumulative
+    
+    processor_spanintent_sampled_cache_misses:
+      description: Number of misses in the sampled traces cache.
+      unit: "{spans}"
+      enabled: true
+      sum:
+        value_type: int
+        monotonic: true
+        aggregation: cumulative
+
+    processor_spanintent_unsampled_cache_hits:
+      description: Number of hits in the unsampled traces cache.
+      unit: "{spans}"
+      enabled: true
+      sum:
+        value_type: int
+        monotonic: true
+        aggregation: cumulative
+    
+    processor_spanintent_unsampled_cache_misses:
+      description: Number of misses in the unsampled traces cache.
+      unit: "{spans}"
+      enabled: true
+      sum:
+        value_type: int
+        monotonic: true
+        aggregation: cumulative
+
+    # Buffer/Queue size (Gauge)
+    processor_spanintent_trace_buffer_size:
+      description: Current number of unique trace IDs in the internal buffer.
+      unit: "{spans}"
+      enabled: true
+      gauge:
+        value_type: int
+
+    # Error metrics
+    processor_spanintent_errors_total:
+      description: Total number of errors encountered during span intent processing.
+      unit: "{errors}"
+      enabled: true
+      sum:
+        value_type: int
+        monotonic: true
+        aggregation: cumulative
+      attributes:
+        - error_type

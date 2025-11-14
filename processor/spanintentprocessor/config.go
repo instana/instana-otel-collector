@@ -18,7 +18,7 @@ type SamplingBias struct {
 
 // Config defines the processor configuration.
 type Config struct {
-	processor.Settings `mapstructure:",squash"` //component.ProcessorSettings `mapstructure:",squash"`
+	processor.Settings `mapstructure:",squash"` // component.ProcessorSettings `mapstructure:",squash"`
 
 	// SamplingPercentage is the base percentage of traces to sample (0.0 to 1.0)
 	SamplingPercentage float64 `mapstructure:"sampling_percentage"`
@@ -31,17 +31,16 @@ type Config struct {
 	UnsampledTracesCacheSize int `mapstructure:"unsampled_traces_cache_size"`
 }
 
-
 func DefaultConfig() *Config {
-    return &Config{
-        Settings: processor.Settings{
-            ID: component.NewID(typeStr),
-        },
-        SamplingPercentage:       0.3,
-        SamplingBias:             SamplingBias{Normal: 0.3, Degraded: 1.0, Failed: 1.0},
-        SampledTracesCacheSize:   10000,
-        UnsampledTracesCacheSize: 10000,
-    }
+	return &Config{
+		Settings: processor.Settings{
+			ID: component.NewID(typeStr),
+		},
+		SamplingPercentage:       0.3,
+		SamplingBias:             SamplingBias{Normal: 0.3, Degraded: 1.0, Failed: 1.0},
+		SampledTracesCacheSize:   10000,
+		UnsampledTracesCacheSize: 10000,
+	}
 }
 
 // Validate checks the configuration values for correctness.

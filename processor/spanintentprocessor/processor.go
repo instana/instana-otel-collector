@@ -1,11 +1,9 @@
-package spanintentprocessor
+package spanintentprocessor // import "github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor"
 
 import (
 	"context"
 	"fmt"
-	"math"
 	"math/rand"
-	"sort"
 	"sync"
 	"time"
 
@@ -56,6 +54,7 @@ type spanIntentProcessor struct {
 type traceData struct {
 	resourceAttrs pcommon.Map
 	spans         []ptrace.Span
+	maxLatency    float64
 }
 
 func newSpanIntentProcessor(
@@ -230,7 +229,7 @@ func (p *spanIntentProcessor) processTraces(ctx context.Context, td ptrace.Trace
 				traceDataItem := getOrCreateTrace(traceID, resourceAttrs, tracesToProcess)
 				traceDataItem.spans = append(traceDataItem.spans, span)
 				p.mu.Unlock()
-				
+
 				// Analyze the span latencies and categorize based on the quantile
 				serviceName := "unknown"
 				if attr, ok := traceDataItem.resourceAttrs.Get("service.name"); ok && attr.Type() == pcommon.ValueTypeStr {
@@ -300,197 +299,111 @@ func (p *spanIntentProcessor) processTraces(ctx context.Context, td ptrace.Trace
 }
 
 func (p *spanIntentProcessor) processTracesForSampling(
-	normalSet, degradedSet, failedSet map[pcommon.TraceID]struct{},
-	tracesToProcess map[pcommon.TraceID]*traceData,
+    normalSet, degradedSet, failedSet map[pcommon.TraceID]struct{},
+    tracesToProcess map[pcommon.TraceID]*traceData,
 ) {
-	p.logger.Info("Entering processTracesForSampling")
+    p.logger.Info("Entering processTracesForSampling")
 
-	// Step 1: De-duplication of trace IDs across categories
-	for tid := range failedSet {
-		delete(normalSet, tid)
-		delete(degradedSet, tid)
-	}
-	for tid := range degradedSet {
-		delete(normalSet, tid)
-	}
+    // Step 1: De-duplication of trace IDs across categories
+    for tid := range failedSet {
+        delete(normalSet, tid)
+        delete(degradedSet, tid)
+    }
+    for tid := range degradedSet {
+        delete(normalSet, tid)
+    }
 
-	// Update Metrics with the count in each category
-	p.mTracesClassifiedTotal.Add(context.Background(), int64(len(normalSet)),
-		metric.WithAttributes(attribute.String("classification_category", "normal")))
-	p.mTracesClassifiedTotal.Add(context.Background(), int64(len(degradedSet)),
-		metric.WithAttributes(attribute.String("classification_category", "degraded")))
-	p.mTracesClassifiedTotal.Add(context.Background(), int64(len(failedSet)),
-		metric.WithAttributes(attribute.String("classification_category", "failed")))
+    // Update Metrics with the count in each category
+    categories := map[string]map[pcommon.TraceID]struct{}{
+        "normal":   normalSet,
+        "degraded": degradedSet,
+        "failed":   failedSet,
+    }
 
-	categorySets := map[string]map[pcommon.TraceID]struct{}{
-		"normal":   normalSet,
-		"degraded": degradedSet,
-		"failed":   failedSet,
-	}
+    for name, set := range categories {
+        p.mTracesClassifiedTotal.Add(context.Background(), int64(len(set)),
+            metric.WithAttributes(attribute.String("classification_category", name)))
+    }
 
-	// Step 2: Initialize t-digests per category for better latency range representation
-	digests := map[string]*utility.TDigest{
-		"normal":   utility.NewTDigest(),
-		"degraded": utility.NewTDigest(),
-		"failed":   utility.NewTDigest(),
-	}
+    biasMap := map[string]float64{
+        "normal":   p.cfg.SamplingBias.Normal,
+        "degraded": p.cfg.SamplingBias.Degraded,
+        "failed":   p.cfg.SamplingBias.Failed,
+    }
 
-	// Step 3: Process each category to sample the traces
-	for category, set := range categorySets {
-		if len(set) == 0 {
-			continue
-		}
+    totalTraces := len(normalSet) + len(degradedSet) + len(failedSet)
+    if totalTraces == 0 {
+        return
+    }
 
-		traceMaxLatency := make(map[pcommon.TraceID]float64)
-		digest := digests[category]
+    // Step 2: Calculate sampling budget
+    totalBudget := int(float64(totalTraces) * p.cfg.SamplingPercentage)
+    if totalBudget == 0 {
+        totalBudget = 1 // Always sample at least one if any traces exist
+    }
 
-		// Compute max latency per trace and add to digest
-		for tid := range set {
-			trace := tracesToProcess[tid]
-			maxLatency := 0.0
-			for _, span := range trace.spans {
-				latency := float64(span.EndTimestamp()-span.StartTimestamp()) / 1e6
-				if latency > maxLatency {
-					maxLatency = latency
-				}
-			}
-			traceMaxLatency[tid] = maxLatency
-			digest.Add(maxLatency, 1)
-		}
+    allocated := make(map[string]int)
+    remainingBudget := totalBudget
+    remainingBias := 0.0
 
-		if digest.Count() == 0 {
-			continue
-		}
+    // Step 2a: Fully allocate bias==1 categories
+    for label, traces := range categories {
+        if biasMap[label] == 1 {
+            allocated[label] = len(traces)
+            remainingBudget -= len(traces)
+        } else {
+            remainingBias += biasMap[label]
+        }
+    }
 
-		// Dynamically determine number of bins (2–6) based on latency quantile heuristic (to be robust)
-		minBins, maxBins := 2, 6
+    // Step 2b: Proportional allocation for others
+    for label, traces := range categories {
+        if biasMap[label] < 1 {
+            alloc := int((biasMap[label] / remainingBias) * float64(remainingBudget))
+            if alloc > len(traces) {
+                alloc = len(traces)
+            }
+            allocated[label] = alloc
+        }
+    }
 
-		// Use digest quantiles to assess spread and skew
-		p10 := digest.Quantile(0.10)
-		p50 := digest.Quantile(0.50)
-		p90 := digest.Quantile(0.90)
+    // Step 3: Random sampling per category
+    for category, set := range categories {
+        if len(set) == 0 {
+            continue
+        }
 
-		// Compute a normalized spread ratio relative to median latency
-		spreadRatio := (p90 - p10) / (p50 + 1e-9)
+	categoryBudget := allocated[category]
+        if categoryBudget == 0 {
+            categoryBudget = 1
+        }
 
-		// Normalize spreadRatio roughly into [0, 1] range
-		// Once the 90th percentile is about 1.5× further from the 10th percentile than the median, that’s already high variability
-		spreadNorm := math.Min(spreadRatio/1.5, 1.0)
+        // Convert set to slice for random selection
+        tids := make([]pcommon.TraceID, 0, len(set))
+        for tid := range set {
+            tids = append(tids, tid)
+        }
 
-		// Map normalized spread to dynamic number of bins
-		numBins := minBins + int(math.Round(spreadNorm*float64(maxBins-minBins)))
-		if numBins < minBins {
-			numBins = minBins
-		}
-		if numBins > maxBins {
-			numBins = maxBins
-		}
+        // Shuffle slice
+        rand.Shuffle(len(tids), func(i, j int) { tids[i], tids[j] = tids[j], tids[i] })
 
-		// Compute bin edges using t-digest quantiles
-		binEdges := make([]float64, numBins+1)
-		for i := 0; i <= numBins; i++ {
-			q := float64(i) / float64(numBins)
-			binEdges[i] = digest.Quantile(q)
-		}
-
-		// Step 4: Assign traces to bins
-		bins := make([][]pcommon.TraceID, numBins)
-		for tid, lat := range traceMaxLatency {
-			idx := numBins - 1
-			for i := 0; i < numBins; i++ {
-				if lat <= binEdges[i+1] {
-					idx = i
-					break
-				}
-			}
-			bins[idx] = append(bins[idx], tid)
-		}
-
-		// Step 5: Sampling with weighted bias per bin
-		totalTracesInCategory := len(set)
-		categoryBudget := int(float64(totalTracesInCategory) * p.cfg.SamplingPercentage)
-		if categoryBudget == 0 {
-			categoryBudget = 1
-		}
-
-		// Latency bias factor
-		BETA := 0.25
-
-		for binIdx, bin := range bins {
-			if len(bin) == 0 {
-				continue
-			}
-
-			// Determine bin budget proportional to bin size
-			binBudget := int(math.Max(1,
-				math.Round(float64(categoryBudget)*float64(len(bin))/float64(totalTracesInCategory))))
-
-			// Compute weighted probabilities based on latency
-			maxLatency := 0.0
-			for _, tid := range bin {
-				if traceMaxLatency[tid] > maxLatency {
-					maxLatency = traceMaxLatency[tid]
-				}
-			}
-
-			weights := make([]float64, len(bin))
-			for i, tid := range bin {
-				lat := traceMaxLatency[tid]
-				weights[i] = math.Max((1.0-BETA)+BETA*(lat/maxLatency), 0.01)
-			}
-
-			// Weighted reservoir sampling
-			selected := weightedSample(bin, weights, binBudget)
-
-			// Update the metrics to mark sampled and unsampled traces
-			for _, tid := range bin {
-				if selected[tid] {
-					p.sampledTraces.Put(tid, true)
-					p.mTracesSampled.Add(context.Background(), 1, metric.WithAttributes(
-						attribute.String("sampling_category", category),
-						attribute.Int("latency_bin", binIdx),
-					))
-					trace := tracesToProcess[tid]
-					p.forwardTrace(tid, trace.spans, trace.resourceAttrs)
-				} else {
-					p.unsampledTraces.Put(tid, true)
-					p.mTracesUnsampled.Add(context.Background(), 1, metric.WithAttributes(
-						attribute.String("sampling_category", category),
-						attribute.Int("latency_bin", binIdx),
-					))
-				}
-			}
-		}
-	}
-}
-
-// Function to perform weighted random sampling
-func weightedSample(traces []pcommon.TraceID, weights []float64, k int) map[pcommon.TraceID]bool {
-	selected := make(map[pcommon.TraceID]bool)
-	if k >= len(traces) {
-		for _, tid := range traces {
-			selected[tid] = true
-		}
-		return selected
-	}
-
-	// Weighted roulette selection
-	totalWeight := 0.0
-	cumWeights := make([]float64, len(weights))
-	for i, w := range weights {
-		totalWeight += w
-		cumWeights[i] = totalWeight
-	}
-
-	rand.Seed(time.Now().UnixNano())
-	for len(selected) < k {
-		r := rand.Float64() * totalWeight
-		idx := sort.Search(len(cumWeights), func(i int) bool { return cumWeights[i] >= r })
-		if idx >= 0 && idx < len(traces) {
-			selected[traces[idx]] = true
-		}
-	}
-	return selected
+        // Pick first `categoryBudget` traces
+        for i, tid := range tids {
+            trace := tracesToProcess[tid]
+            if i < categoryBudget {
+                p.sampledTraces.Put(tid, true)
+                p.mTracesSampled.Add(context.Background(), 1, metric.WithAttributes(
+                    attribute.String("sampling_category", category),
+                ))
+                p.forwardTrace(tid, trace.spans, trace.resourceAttrs)
+            } else {
+                p.unsampledTraces.Put(tid, true)
+                p.mTracesUnsampled.Add(context.Background(), 1, metric.WithAttributes(
+                    attribute.String("sampling_category", category),
+                ))
+            }
+        }
+    }
 }
 
 func getOrCreateTrace(

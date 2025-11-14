@@ -43,7 +43,6 @@ type spanIntentProcessor struct {
 	mUnsampledCacheHits      metric.Int64Counter
 	mUnsampledCacheMisses    metric.Int64Counter
 	mTracesClassifiedTotal   metric.Int64Counter
-	mTracesProcessed         metric.Int64Counter
 	mTracesSampled           metric.Int64Counter
 	mTracesUnsampled         metric.Int64Counter
 	mErrorsTotal             metric.Int64Counter
@@ -100,10 +99,6 @@ func newSpanIntentProcessor(
 	if err != nil {
 		return nil, err
 	}
-	mTracesProcessed, err := meter.Int64Counter("processor.spanintent.traces_processed")
-	if err != nil {
-		return nil, err
-	}
 	mTracesSampled, err := meter.Int64Counter("processor.spanintent.traces_sampled")
 	if err != nil {
 		return nil, err
@@ -154,7 +149,6 @@ func newSpanIntentProcessor(
 		mUnsampledCacheHits:      mUnsampledCacheHits,
 		mUnsampledCacheMisses:    mUnsampledCacheMisses,
 		mTracesClassifiedTotal:   mTracesClassifiedTotal,
-		mTracesProcessed:         mTracesProcessed,
 		mTracesSampled:           mTracesSampled,
 		mTracesUnsampled:         mTracesUnsampled,
 		mErrorsTotal:             mErrorsTotal,

@@ -31,9 +31,9 @@ processors:
   spanintentprocessor:
     sampling_percentage: 0.1
     sampling_bias:
-      normal: 0.999
-      degraded: 0.999
-      failed: 0.999
+      normal: 0.5
+      degraded: 0.7
+      failed: 0.9
     sampled_traces_cache_size: 1000
     unsampled_traces_cache_size: 1000
 

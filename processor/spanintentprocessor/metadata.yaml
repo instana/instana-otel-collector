@@ -57,15 +57,6 @@ telemetry:
         monotonic: true
         aggregation: cumulative
 
-    processor_spanintent_traces_processed:
-      description: Number of traces processed by the span intent processor.
-      unit: "{traces}"
-      enabled: true
-      sum:
-        value_type: int
-        monotonic: true
-        aggregation: cumulative
-
     processor_spanintent_traces_classified_total:
       description: Total number of traces classified by intent.
       unit: "{traces}"

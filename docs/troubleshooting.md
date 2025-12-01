@@ -47,6 +47,24 @@ This document provides solutions for common issues encountered when using the In
     3. Add the certificate to your system's trusted certificate store i.e copy your .crt file to /usr/share/pki/ca-trust-source/anchors/ for RHEL/CentOS/Fedora or /usr/local/share/ca-certificates/ for Debian/Ubuntu.
     4. Restart the collector service
 
+## Span Status Issues
+
+### HTTP 4xx Status Codes Marked as Errors
+
+- **Issue**: Spans with HTTP 4xx status codes (e.g., 400 Bad Request) are being marked as errors, but these are expected behavior in your application
+  - **Solution**: As of July 2024, the OpenTelemetry specification changed to allow instrumentations to set span status more precisely based on context. If you want to filter out specific 4xx responses that are not actual errors in your use case, configure the `transform` processor block in your collector configuration to contain the following, then add to pipeline.
+  
+  ```yaml
+    transform/span_parse:
+      error_mode: ignore
+      trace_statements:
+       - context: span
+         statements:
+           - set(status.code, STATUS_CODE_OK) where attributes["http.status_code"] >= 400 and attributes["http.status_code"] < 500
+  ```  
+  This allows you to set the span status to OK for specific HTTP status codes. 
+  - **References**: [OTel Semantic Conventions Issue #1003](https://github.com/open-telemetry/semantic-conventions/issues/1003), [PR #1167](https://github.com/open-telemetry/semantic-conventions/pull/1167)
+
 
 ## Linux Issues
 

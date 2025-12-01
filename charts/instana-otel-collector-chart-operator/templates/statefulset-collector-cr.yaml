@@ -1,0 +1,115 @@
+{{- if .Values.instana.statefulset.enabled }}
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: {{ .Values.instana.statefulset.name | default "idot-statefulset-collector" }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "10"
+spec:
+  mode: statefulset
+  replicas: {{ .Values.instana.statefulset.replicas | default 1 }}
+  image: "icr.io/instana/idot:latest"
+  imagePullPolicy: "IfNotPresent"
+  envFrom:
+    {{- if .Values.instana.statefulset.extraEnvsFrom }}
+    {{- toYaml .Values.instana.statefulset.extraEnvsFrom | nindent 4 }}
+    {{- end }}
+  env:
+    - name: MY_POD_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.podIP
+    - name: HOSTNAME
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.name
+    # Instana connection details
+    - name: INSTANA_ENDPOINT
+      value: {{ required "Instana endpoint is required" .Values.instanaEndpoint | quote }}
+    - name: INSTANA_KEY
+      value: {{ required "Instana key is required" .Values.instanaKey | quote }}
+    # Cluster metadata
+    - name: K8S_DISTRIBUTION
+      value: {{ .Values.instana.clusterDistribution | default "kubernetes" | quote }}
+    - name: INSTANA_CLUSTER_NAME
+      value: {{ .Values.clusterName | quote }}
+    - name: INSTANA_CLUSTER_ID
+      value: {{ .Values.instana.clusterID | default "" | quote }}
+    # Additional environment variables
+    {{- if .Values.instana.statefulset.env }}
+    {{- range .Values.instana.statefulset.env }}
+    - name: {{ .name }}
+      value: {{ .value | quote }}
+    {{- end }}
+    {{- else }}
+    - name: INSTANA_OTEL_SERVICE_NAME
+      value: "instana-otel-collector"
+    - name: INSTANA_OTEL_SERVICE_VERSION
+      value: "latest"
+    - name: INSTANA_OTEL_ENTITY_TYPE
+      value: "otel-collector"
+    {{- end }}
+  config:
+    {{- if .Values.instana.statefulset.config }}
+    {{- toYaml .Values.instana.statefulset.config | nindent 4 }}
+    {{- else }}
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: ${env:MY_POD_IP}:4317
+          http:
+            endpoint: ${env:MY_POD_IP}:4318
+      k8s_cluster:
+        collection_interval: 30s
+        node_conditions_to_report: ["Ready", "MemoryPressure", "DiskPressure", "NetworkUnavailable", "PIDPressure"]
+        allocatable_types_to_report: ["cpu", "memory", "storage", "ephemeral-storage"]
+        distribution: ${env:K8S_DISTRIBUTION:-kubernetes}
+      k8s_events:
+        auth_type: serviceAccount
+    processors:
+      memory_limiter:
+        check_interval: 1s
+        limit_percentage: 50
+        spike_limit_percentage: 10
+      batch: {}
+    exporters:
+      otlp/instana:
+        endpoint: '${env:INSTANA_ENDPOINT}'
+        tls:
+          insecure: false
+        headers:
+          x-instana-key: '${env:INSTANA_KEY}'
+          x-instana-host: '${env:HOSTNAME:-hostname}'
+    service:
+      pipelines:
+        metrics:
+          receivers:
+          - otlp
+          - k8s_cluster
+          exporters:
+          - otlp/instana
+          processors:
+          - memory_limiter
+          - batch
+        logs:
+          receivers:
+          - otlp
+          - k8s_events
+          exporters:
+          - otlp/instana
+          processors:
+          - memory_limiter
+          - batch
+        traces:
+          receivers:
+          - otlp
+          exporters:
+          - otlp/instana
+          processors:
+          - memory_limiter
+          - batch
+    {{- end }}
+{{- end }}

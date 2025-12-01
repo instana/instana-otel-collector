@@ -1,0 +1,53 @@
+# IDOT Operator Chart defines the Helm chart metadata and dependencies
+# This chart deploys Instana's OpenTelemetry collectors for Kubernetes monitoring using the OpenTelemetry Operator
+
+# API version of the Helm chart
+apiVersion: v2
+
+# Name of the Helm chart
+name: instana-otel-collector-chart-operator
+
+# Chart version - follows semantic versioning
+version: 1.310.0
+appVersion: 1.310.0
+
+# Description of what the chart does
+description: |
+  Instana's Distributed OpenTelemetry (IDOT) chart for Kubernetes monitoring with OpenTelemetry Operator.
+  Deploys OpenTelemetry collectors in both DaemonSet and StatefulSet modes
+  to collect metrics, traces, and logs from Kubernetes clusters using the OpenTelemetry Operator.
+
+# Type of chart (application or library)
+type: application
+
+# Chart maintainers and their contact information
+maintainers:
+  - name: Instana Team
+    url: https://www.ibm.com/products/instana
+
+# Keywords to help users find this chart
+keywords:
+  - monitoring
+  - observability
+  - opentelemetry
+  - instana
+  - kubernetes
+  - metrics
+  - traces
+  - logs
+  - operator
+
+# Home page URL for the project
+home: https://www.ibm.com/docs/en/instana-observability
+
+# Annotations for additional metadata
+annotations:
+  category: Monitoring
+
+# Dependencies
+dependencies:
+  - name: opentelemetry-operator
+    version: "0.97.1"
+    repository: "https://open-telemetry.github.io/opentelemetry-helm-charts"
+
+

@@ -5,8 +5,8 @@ dist:
   module: github.com/instana/instana-otel-collector
   name: instana-otel-collector
   description: Instana Distribution of OpenTelemetry Collector
-  output_path: ./cmd/instanaoteltestbedcol
-  version: 1.306.0
+  output_path: ./cmd/idot
+  version: 1.310.0
 
 # ===== Configuration Providers =====
 # These providers allow the collector to load configuration from different sources

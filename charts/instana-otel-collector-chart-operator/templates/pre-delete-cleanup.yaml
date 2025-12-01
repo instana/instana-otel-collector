@@ -1,0 +1,26 @@
+# Pre-delete job that removes all Instana OpenTelemetry collector resources
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-pre-delete
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/component: pre-delete
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  annotations:
+    "helm.sh/hook": pre-delete
+    "helm.sh/hook-weight": "3"
+    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+spec:
+  template:
+    spec:
+      containers:
+      - name: pre-delete
+        image: registry.k8s.io/kubectl:v1.32.7
+        command: [
+          "kubectl", "delete", "OpenTelemetryCollector", "-n", "{{ .Release.Namespace }}",
+          "--all", "--grace-period=60", "--wait=true", "--timeout=120s", "--ignore-not-found=true" ]
+      restartPolicy: Never
+      serviceAccountName: {{ .Release.Name }}-cleanup
+  backoffLimit: 3
+

@@ -129,6 +129,13 @@ daemonset:
               - set(severity_text, "Warn")  where IsMatch(body.string, ".*WARN.*")
               - set(severity_text, "Error") where IsMatch(body.string, ".*ERROR.*")
               - set(severity_text, "Fatal") where IsMatch(body.string, ".*FATAL.*")
+      # Transform processor - parse spans: not enabled by default.
+      # Link to docs: https://www.ibm.com/docs/en/instana-observability/1.0.307?topic=collector-troublshooting-instana-distribution-opentelemetry
+      #   error_mode: ignore
+      #   trace_statements:
+      #     - context: span
+      #       statements:
+      #         - set(status.code, STATUS_CODE_OK) where attributes["http.status_code"] >= 400 and attributes["http.status_code"] < 500
       resourcedetection/env: # Detects cluster info (name, region) from environment variables
         detectors:
           - env
@@ -157,6 +164,8 @@ daemonset:
       kubeletstats:
         insecure_skip_verify: true
         node: '${env:K8S_NODE_NAME}'
+        k8s_api_config:
+          auth_type: serviceAccount
         metrics:
           k8s.container.cpu.node.utilization:
             enabled: true
@@ -170,8 +179,11 @@ daemonset:
             enabled: true
           container.memory.available:
             enabled: true
+          container.memory.usage:
+            enabled: true
         extra_metadata_labels:
           - container.id
+        metric_groups: [node, pod, container]
       otlp: # Enables OTLP ingestion (both gRPC and HTTP) for metrics, logs, traces
         protocols:
           grpc:
@@ -185,6 +197,7 @@ daemonset:
           insecure: false # Set false in production for TLS enforcement
         headers:
           x-instana-key: '${env:INSTANA_KEY}'
+          x-instana-host: '${env:HOSTNAME:-hostname}'
       debug: {} # Debugging exporter — writes telemetry to stdout
     service:
       pipelines:
@@ -206,6 +219,18 @@ daemonset:
           exporters:
           # - debug
           - otlp/instana
+        traces:
+          receivers:
+          - otlp
+          exporters:
+          # - debug
+          - otlp/instana
+          processors:
+          - resourcedetection/env # Adds environment resource attributes first
+          - k8sattributes         # Enriches telemetry with Kubernetes metadata
+          - memory_limiter        # Protects collector from memory spikes
+          - transform/resource_adjustments
+          - batch                 # Batches traces for efficient export
       # Collector's own telemetry configuration (self-monitoring)
       telemetry:
         # Metrics telemetry configuration
@@ -215,7 +240,7 @@ daemonset:
                 exporter:
                   otlp:
                     protocol: http/protobuf
-                    endpoint: ${env:MY_POD_IP}:4318
+                    endpoint: http://${env:MY_POD_IP}:4318
         # Log telemetry configuration
         logs:
           level: INFO
@@ -224,7 +249,7 @@ daemonset:
                 exporter:
                   otlp:
                     protocol: http/protobuf
-                    endpoint: ${env:MY_POD_IP}:4318
+                    endpoint: http://${env:MY_POD_IP}:4318
         # Resource attributes for identifying the collector itself
         resource:
           service.name: ${env:INSTANA_OTEL_SERVICE_NAME:-otel-collector}
@@ -322,6 +347,13 @@ statefulset:
       resourcedetection/env: # Detects cluster info (name, region) from environment variables
         detectors:
           - env
+      # Transform processor - parse spans: not enabled by default.
+      # Link to docs: https://www.ibm.com/docs/en/instana-observability/1.0.307?topic=collector-troublshooting-instana-distribution-opentelemetry
+      #   error_mode: ignore
+      #   trace_statements:
+      #     - context: span
+      #       statements:
+      #         - set(status.code, STATUS_CODE_OK) where attributes["http.status_code"] >= 400 and attributes["http.status_code"] < 500
       transform/resource_adjustments:
         error_mode: ignore
         metric_statements:
@@ -348,6 +380,7 @@ statefulset:
           insecure: false # Set false in production for TLS enforcement
         headers:
           x-instana-key: '${env:INSTANA_KEY}'
+          x-instana-host: '${env:HOSTNAME:-hostname}'
       debug: {} # Debugging exporter — writes telemetry to stdout
     service:
       pipelines:
@@ -368,6 +401,18 @@ statefulset:
           exporters:
           # - debug
           - otlp/instana
+        traces:
+          receivers:
+          - otlp
+          exporters:
+          # - debug
+          - otlp/instana
+          processors:
+          - resourcedetection/env # Adds environment resource attributes first
+          - k8sattributes         # Enriches telemetry with Kubernetes metadata
+          - memory_limiter        # Protects collector from memory spikes
+          - transform/resource_adjustments
+          - batch                 # Batches traces for efficient export
       # Collector's own telemetry configuration (self-monitoring)
       telemetry:
         # Metrics telemetry configuration
@@ -377,7 +422,7 @@ statefulset:
                 exporter:
                   otlp:
                     protocol: http/protobuf
-                    endpoint: ${env:MY_POD_IP}:4318
+                    endpoint: http://${env:MY_POD_IP}:4318
         # Log telemetry configuration
         logs:
           level: INFO
@@ -386,7 +431,7 @@ statefulset:
                 exporter:
                   otlp:
                     protocol: http/protobuf
-                    endpoint: ${env:MY_POD_IP}:4318
+                    endpoint: http://${env:MY_POD_IP}:4318
         # Resource attributes for identifying the collector itself
         resource:
           service.name: ${env:INSTANA_OTEL_SERVICE_NAME:-otel-collector}

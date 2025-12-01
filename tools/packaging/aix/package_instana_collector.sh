@@ -121,8 +121,8 @@ build_collector() {
     local current_dir
     current_dir=$(pwd)
     
-    cd cmd/idot_linux || {
-        log "ERROR" "Failed to change directory to cmd/idot_linux"
+    cd cmd/idot_aix || {
+        log "ERROR" "Failed to change directory to cmd/idot_aix"
         exit 1
     }
     
@@ -223,24 +223,24 @@ package_files() {
     mkdir -p collector/bin collector/config collector/logs
     
     # Copy configuration files
-    if ! cp config/linux/config.yaml collector/config/config.example.yaml; then
+    if ! cp config/aix/config.yaml collector/config/config.example.yaml; then
         log "ERROR" "Failed to copy config.yaml"
         exit 1
     fi
     
     # Copy service scripts
-    if ! cp tools/packaging/linux/instana_collector_service.sh collector/bin; then
+    if ! cp tools/packaging/aix/instana_collector_service.sh collector/bin; then
         log "ERROR" "Failed to copy instana_collector_service.sh"
         exit 1
     fi
     
-    if ! cp tools/packaging/linux/uninstall.sh collector/bin; then
+    if ! cp tools/packaging/aix/uninstall.sh collector/bin; then
         log "ERROR" "Failed to copy uninstall.sh"
         exit 1
     fi
     
     # Move built binaries
-    if ! mv cmd/idot_linux/instana-otel-collector collector/bin/instana-otelcol; then
+    if ! mv cmd/idot_aix/instana-otel-collector collector/bin/instana-otelcol; then
         log "ERROR" "Failed to move collector binary"
         exit 1
     fi
@@ -249,7 +249,7 @@ package_files() {
     if [[ "$SUPERVISOR" == "true" ]]; then
         log "DEBUG" "Including supervisor components..."
         
-        if ! cp tools/packaging/linux/instana_supervisor_service.sh collector/bin; then
+        if ! cp tools/packaging/aix/instana_supervisor_service.sh collector/bin; then
             log "ERROR" "Failed to copy instana_supervisor_service.sh"
             exit 1
         fi
@@ -296,17 +296,9 @@ create_installer_script() {
     
     log "DEBUG" "Embedding tar.gz into script..."
     
-    # Use a more efficient approach for base64 encoding
-    local base64_cmd
-    if command -v base64 &>/dev/null; then
-        if base64 --help 2>&1 | grep -q -- "-w"; then
-            # GNU base64 (Linux)
-            base64_cmd="base64 -w 0"
-        else
-            # BSD base64 (macOS)
-            base64_cmd="base64"
-        fi
-    else
+    # AIX base64 doesn't support -w flag, output is already continuous
+    local base64_cmd="base64"
+    if ! command -v base64 &>/dev/null; then
         log "ERROR" "base64 command not found"
         exit 1
     fi
@@ -421,8 +413,8 @@ if [[ ! "\$INSTANA_OTEL_ENDPOINT_GRPC" =~ ^[a-zA-Z][a-zA-Z0-9+.-]*:// ]]; then
 fi
 
 # Extract base domain and protocol for endpoint derivation
-ENDPOINT_PROTOCOL="\$(echo "\$INSTANA_OTEL_ENDPOINT_GRPC" | sed -E 's|^([a-zA-Z][a-zA-Z0-9+.-]*://).*|\1|')"
-ENDPOINT_DOMAIN="\$(echo "\$INSTANA_OTEL_ENDPOINT_GRPC" | sed -E 's|^[a-zA-Z][a-zA-Z0-9+.-]*://||' | sed -E 's|:[0-9]+$||' | sed -E 's|/.*$||')"
+ENDPOINT_PROTOCOL="\$(echo "\$INSTANA_OTEL_ENDPOINT_GRPC" | sed 's|^\([a-zA-Z][a-zA-Z0-9+.-]*://\).*|\1|')"
+ENDPOINT_DOMAIN="\$(echo "\$INSTANA_OTEL_ENDPOINT_GRPC" | sed 's|^[a-zA-Z][a-zA-Z0-9+.-]*://||' | sed 's|:[0-9][0-9]*$||' | sed 's|/.*$||')"
 
 # Extract port from GRPC endpoint (if any)
 GRPC_PORT="\$(echo "\$INSTANA_OTEL_ENDPOINT_GRPC" | sed -nE 's|.*:([0-9]+).*|\1|p')"
@@ -452,18 +444,19 @@ fi
 if [[ -z "\$INSTANA_OPAMP_ENDPOINT" ]]; then
   # Transform the endpoint domain based on pattern for OpAMP
 
-  SAAS_REGEX='^otlp(-grpc)?-[a-zA-Z0-9]+-saas\.instana\.(io|rocks)$'
-  ONPREM_REGEX='^otlp-grpc\.[A-Za-z0-9.-]+$'
+  SAAS_REGEX='^otlp(-grpc)?-[a-zA-Z0-9]+-saas\.instana\.\(io\|rocks\)$'
+  ONPREM_REGEX='^otlp-grpc\.[A-Za-z0-9.-]\+$'
 
-  if [[ "\$ENDPOINT_DOMAIN" =~ \$SAAS_REGEX ]]; then
+  if echo "\$ENDPOINT_DOMAIN" | grep -E "\$SAAS_REGEX" >/dev/null 2>&1; then
     OPAMP_DOMAIN="\$(
       echo "\$ENDPOINT_DOMAIN" |
-        sed -E 's|^otlp-grpc-|opamp-|; s|^otlp-|opamp-|'
+        sed 's|^otlp-grpc-|opamp-|' |
+        sed 's|^otlp-|opamp-|'
     )"
-  elif [[ "\$ENDPOINT_DOMAIN" =~ \$ONPREM_REGEX ]]; then
+  elif echo "\$ENDPOINT_DOMAIN" | grep -E "\$ONPREM_REGEX" >/dev/null 2>&1; then
     OPAMP_DOMAIN="\$(
       echo "\$ENDPOINT_DOMAIN" |
-        sed -E 's|^otlp-grpc\.|opamp-acceptor.|'
+        sed 's|^otlp-grpc\.|opamp-acceptor.|'
     )"
   else
     # ERROR: not default domain format
@@ -487,18 +480,18 @@ fi
 if [[ -z "\$INSTANA_METRICS_ENDPOINT" ]]; then
   # Transform the endpoint domain based on pattern 
 
-  SAAS_REGEX='^otlp(-grpc)?-[a-zA-Z0-9]+-saas\.instana\.(io|rocks)$'
-  ONPREM_REGEX='^otlp-grpc\.[A-Za-z0-9.-]+$'
+  SAAS_REGEX='^otlp\(-grpc\)\{0,1\}-[a-zA-Z0-9][a-zA-Z0-9]*-saas\.instana\.\(io\|rocks\)$'
+  ONPREM_REGEX='^otlp-grpc\.[A-Za-z0-9.-][A-Za-z0-9.-]*$'
 
-  if [[ "\$ENDPOINT_DOMAIN" =~ \$SAAS_REGEX ]]; then
+  if echo "\$ENDPOINT_DOMAIN" | grep -E "\$SAAS_REGEX" > /dev/null 2>&1; then
     MODIFIED_URL="\$(
       echo "\$ENDPOINT_DOMAIN" |
-        sed -E 's|^otlp-grpc-|ingress-|; s|^otlp-|ingress-|'
+        sed 's|^otlp-grpc-|ingress-|; s|^otlp-|ingress-|'
     )"
-  elif [[ "\$ENDPOINT_DOMAIN" =~ \$ONPREM_REGEX ]]; then
+  elif echo "\$ENDPOINT_DOMAIN" | grep -E "\$ONPREM_REGEX" > /dev/null 2>&1; then
     MODIFIED_URL="\$(
       echo "\$ENDPOINT_DOMAIN" |
-        sed -E 's|^otlp-grpc\.|agent-acceptor.|'
+        sed 's|^otlp-grpc\.|agent-acceptor.|'
     )"
   else
     # ERROR: not default domain format
@@ -519,7 +512,7 @@ mkdir -p "\$INSTALL_PATH"
 
 # Create a temporary file for the tarball
 TEMP_TAR="\$(mktemp)"
-echo "$BASE64_TAR" | base64 --decode > "\$TEMP_TAR"
+echo "$BASE64_TAR" | base64 -d > "\$TEMP_TAR"
 
 # Verify the tarball integrity
 if command -v tar &>/dev/null && ! tar -tf "\$TEMP_TAR" &>/dev/null; then
@@ -537,15 +530,15 @@ rm -f "\$TEMP_TAR"
 echo "Creating config.env file..."
 CONFIG_ENV_PATH="\$INSTALL_PATH/collector/config/config.env"
 cat > "\$CONFIG_ENV_PATH" <<EOF
-INSTANA_OTEL_SERVICE_VERSION=$VERSION
-INSTANA_OTEL_ENDPOINT_GRPC=\$INSTANA_OTEL_ENDPOINT_GRPC
-INSTANA_OTEL_ENDPOINT_HTTP=\$INSTANA_OTEL_ENDPOINT_HTTP
-INSTANA_METRICS_ENDPOINT=\$INSTANA_METRICS_ENDPOINT
-INSTANA_OPAMP_ENDPOINT=\$INSTANA_OPAMP_ENDPOINT
-INSTANA_COMM_PROVIDER=\$INSTANA_COMM_PROVIDER
-INSTANA_KEY=\$INSTANA_KEY
-HOSTNAME=\$HOSTNAME
-INSTANA_OTEL_LOG_LEVEL=info
+export INSTANA_OTEL_SERVICE_VERSION=$VERSION
+export INSTANA_OTEL_ENDPOINT_GRPC=\$INSTANA_OTEL_ENDPOINT_GRPC
+export INSTANA_OTEL_ENDPOINT_HTTP=\$INSTANA_OTEL_ENDPOINT_HTTP
+export INSTANA_METRICS_ENDPOINT=\$INSTANA_METRICS_ENDPOINT
+export INSTANA_OPAMP_ENDPOINT=\$INSTANA_OPAMP_ENDPOINT
+export INSTANA_COMM_PROVIDER=\$INSTANA_COMM_PROVIDER
+export INSTANA_KEY=\$INSTANA_KEY
+export HOSTNAME=\$HOSTNAME
+export INSTANA_OTEL_LOG_LEVEL=info
 EOF
 
 chmod 600 "\$CONFIG_ENV_PATH"

@@ -60,8 +60,8 @@ receivers:
   # AWS Receivers
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awscloudwatchreceiver v0.133.0    # AWS CloudWatch
   # Custom receivers
-  - gomod: github.ibm.com/instana/instana-otel-collector/receiver/shellreceiver v0.2.1                          # Shell metrics
-    path: ./receiver/shellreceiver
+  # - gomod: github.ibm.com/instana/instana-otel-collector/receiver/shellreceiver v0.2.1                          # Shell metrics
+  #   path: ./receiver/shellreceiver
   # - gomod: github.com/instana/instana-otel-collector/receiver/mqappliancereceiver v0.131.0                      # MQ Appliance
 
 # ===== Processors =====

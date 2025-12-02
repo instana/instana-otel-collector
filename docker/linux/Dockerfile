@@ -1,7 +1,7 @@
 #check=skip=SecretsUsedInArgOrEnv
 
 # Stage 1: Build the collector using Red Hat UBI 9
-FROM registry.access.redhat.com/ubi9:9.6-1754586119 AS builder
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest AS builder
 
 # Add metadata labels for documentation and traceability
 LABEL maintainer="Instana Team" \
@@ -9,8 +9,8 @@ LABEL maintainer="Instana Team" \
 
 # Install required packages (only ca-certificates needed for HTTPS)
 # Clean up in the same layer to minimize image size
-RUN dnf install -y ca-certificates && \
-    dnf clean all && rm -rf /var/cache/dnf
+RUN microdnf install -y ca-certificates tar gzip && \
+    microdnf clean all
 
 # Define build-time arguments and default values
 # PAT_TOKEN is required to authenticate GitHub Enterprise API calls
@@ -37,7 +37,7 @@ RUN echo "Building version: ${VERSION}" && \
       "${DOWNLOAD_URL}/${ASSET_ID}" -o /tmp/installer.sh && \
     chmod +x /tmp/installer.sh && \
     # silent mode; endpoint/key not needed for extraction
-    /tmp/installer.sh -s -e localhost:0000 -a tempkey && \
+    /tmp/installer.sh -s -e otlp-grpc.domain.local:0000 -a tempkey && \
     # Remove installer after execution
     rm -f /tmp/installer.sh
 

@@ -5,8 +5,8 @@ dist:
   module: github.com/instana/instana-otel-collector
   name: instana-otel-collector
   description: Instana Distribution of OpenTelemetry Collector
-  output_path: ./cmd/instanaoteltestbedcol
-  version: 1.306.0
+  output_path: ./cmd/idot
+  version: 1.310.0
 
 # ===== Configuration Providers =====
 # These providers allow the collector to load configuration from different sources
@@ -60,7 +60,6 @@ receivers:
   # AWS Receivers
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awscloudwatchreceiver v0.136.0    # AWS CloudWatch
   # Custom receivers
-  # Note: Shell receiver is not included in the public distribution
   # - gomod: github.ibm.com/instana/instana-otel-collector/receiver/shellreceiver v0.2.1                          # Shell metrics
   #   path: ./receiver/shellreceiver
   # - gomod: github.com/instana/instana-otel-collector/receiver/mqappliancereceiver v0.131.0                      # MQ Appliance

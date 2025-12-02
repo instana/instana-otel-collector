@@ -1,0 +1,191 @@
+{{- if .Values.instana.daemonset.enabled }}
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: {{ .Values.instana.daemonset.name | default "idot-daemonset-collector" }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "10"
+spec:
+  mode: daemonset
+  image: "icr.io/instana/idot:latest"
+  imagePullPolicy: "IfNotPresent"
+  podSecurityContext:
+    fsGroup: 0
+  securityContext:
+    runAsUser: 0
+    runAsGroup: 0
+    privileged: true
+  volumeMounts:
+    {{- if .Values.instana.daemonset.volumeMounts }}
+    {{- range .Values.instana.daemonset.volumeMounts }}
+    - name: {{ .name }}
+      mountPath: {{ .mountPath }}
+      {{- if .readOnly }}
+      readOnly: {{ .readOnly }}
+      {{- end }}
+    {{- end }}
+    {{- else }}
+    - name: tmp-volume
+      mountPath: /tmp
+    - name: etc-passwd
+      mountPath: /etc/passwd
+      readOnly: true
+    {{- end }}
+  volumes:
+    {{- if .Values.instana.daemonset.volumes }}
+    {{- range .Values.instana.daemonset.volumes }}
+    - name: {{ .name }}
+      {{- if .emptyDir }}
+      emptyDir: {}
+      {{- else if .hostPath }}
+      hostPath:
+        path: {{ .hostPath.path }}
+        type: {{ .hostPath.type }}
+      {{- end }}
+    {{- end }}
+    {{- else }}
+    - name: tmp-volume
+      emptyDir: {}
+    - name: etc-passwd
+      hostPath:
+        path: /etc/passwd
+        type: File
+    {{- end }}
+  envFrom:
+    {{- if .Values.instana.daemonset.extraEnvsFrom }}
+    {{- toYaml .Values.instana.daemonset.extraEnvsFrom | nindent 4 }}
+    {{- end }}
+  env:
+    - name: K8S_NODE_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: spec.nodeName
+    - name: MY_POD_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.podIP
+    - name: HOSTNAME
+      valueFrom:
+        fieldRef:
+          fieldPath: spec.nodeName
+    # Instana connection details
+    - name: INSTANA_ENDPOINT
+      value: {{ required "Instana endpoint is required" .Values.instanaEndpoint | quote }}
+    - name: INSTANA_KEY
+      value: {{ required "Instana key is required" .Values.instanaKey | quote }}
+    # Cluster metadata
+    - name: K8S_DISTRIBUTION
+      value: {{ .Values.instana.clusterDistribution | default "kubernetes" | quote }}
+    - name: INSTANA_CLUSTER_NAME
+      value: {{ .Values.clusterName | quote }}
+    - name: INSTANA_CLUSTER_ID
+      value: {{ .Values.instana.clusterID | default "" | quote }}
+    # Additional environment variables
+    {{- if .Values.instana.daemonset.env }}
+    {{- range .Values.instana.daemonset.env }}
+    - name: {{ .name }}
+      value: {{ .value | quote }}
+    {{- end }}
+    {{- else }}
+    - name: INSTANA_OTEL_SERVICE_NAME
+      value: "instana-otel-collector"
+    - name: INSTANA_OTEL_SERVICE_VERSION
+      value: "latest"
+    - name: INSTANA_OTEL_ENTITY_TYPE
+      value: "otel-collector"
+    {{- end }}
+  tolerations:
+    {{- if .Values.instana.daemonset.tolerations }}
+    {{- toYaml .Values.instana.daemonset.tolerations | nindent 4 }}
+    {{- else }}
+    - key: node-role.kubernetes.io/master
+      operator: Exists
+      effect: NoSchedule
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
+    - key: CriticalAddonsOnly
+      operator: Exists
+      effect: NoExecute
+    {{- end }}
+  config:
+    {{- if .Values.instana.daemonset.config }}
+    {{- toYaml .Values.instana.daemonset.config | nindent 4 }}
+    {{- else }}
+    receivers:
+      hostmetrics:
+        collection_interval: 30s
+        scrapers:
+          cpu: {}
+          disk: {}
+          filesystem: {}
+          load: {}
+          memory: {}
+          network: {}
+          paging: {}
+          process: {}
+      kubeletstats:
+        collection_interval: 30s
+        auth_type: "serviceAccount"
+        endpoint: "https://${env:K8S_NODE_NAME}:10250"
+        insecure_skip_verify: true
+        metric_groups:
+          - node
+          - pod
+          - container
+        extra_metadata_labels:
+          - container.id
+      otlp:
+        protocols:
+          grpc:
+            endpoint: ${env:MY_POD_IP}:4317
+          http:
+            endpoint: ${env:MY_POD_IP}:4318
+    processors:
+      memory_limiter:
+        check_interval: 1s
+        limit_percentage: 50
+        spike_limit_percentage: 10
+      batch: {}
+    exporters:
+      otlp/instana:
+        endpoint: '${env:INSTANA_ENDPOINT}'
+        tls:
+          insecure: false
+        headers:
+          x-instana-key: '${env:INSTANA_KEY}'
+          x-instana-host: '${env:HOSTNAME:-hostname}'
+    service:
+      pipelines:
+        metrics:
+          receivers:
+          - otlp
+          - hostmetrics
+          - kubeletstats
+          exporters:
+          - otlp/instana
+          processors:
+          - memory_limiter
+          - batch
+        logs:
+          receivers:
+          - otlp
+          exporters:
+          - otlp/instana
+          processors:
+          - memory_limiter
+          - batch
+        traces:
+          receivers:
+          - otlp
+          exporters:
+          - otlp/instana
+          processors:
+          - memory_limiter
+          - batch
+    {{- end }}
+{{- end }}
+
+

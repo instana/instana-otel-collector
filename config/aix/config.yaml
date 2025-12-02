@@ -1,5 +1,5 @@
 ---
-# ===== Instana Distribution of OpenTelemetry Collector Configuration for Linux =====
+# ===== Instana Distribution of OpenTelemetry Collector Configuration for AIX =====
 # This configuration file defines how the Instana Distribution of OpenTelemetry Collector
 # collects, processes, and exports telemetry data (traces, metrics, and logs).
 #
@@ -43,9 +43,6 @@ receivers:
       memory:                        # Memory usage metrics
       network:                       # Network I/O metrics
       paging:                        # Memory paging/swap metrics
-      process:                       # Per-process metrics
-        mute_process_exe_error: true # Suppress errors when process executables can't be accessed
-      system:                        # General system metrics (CPU, uptime, etc.)
 
 # ===== PROCESSORS =====
 # Processors transform, filter, or enrich the data as it passes through the collector.
@@ -96,6 +93,9 @@ processors:
   tail_sampling: {}                  # Samples traces based on their content
   probabilistic_sampler: {}          # Samples data based on probability
   k8sattributes: {}                  # Enriches data with Kubernetes metadata
+  memory_limiter: 
+    check_interval: 1s
+    limit_mib: 512
 
 # ===== EXPORTERS =====
 # Exporters send the collected and processed data to various destinations.
@@ -128,7 +128,7 @@ service:
   pipelines:
     # ===== OTLP Pipeline =====
     # These pipelines handle data received via OTLP protocol from instrumented applications
-    
+
     # Trace data pipeline for OTLP data
     traces/otlp:
       receivers: [otlp/receiver]                      # Collect traces from OTLP receiver
@@ -146,7 +146,7 @@ service:
       receivers: [otlp/receiver]                      # Collect metrics from OTLP receiver
       processors: [batch]                             # Process metrics with batching
       exporters: [otlphttp/exporter]                  # Send metrics to Instana backend
-      
+
     # ===== COLLECTOR Pipeline =====
     # These pipelines handle data collected directly by the collector from the host system
 
@@ -176,6 +176,7 @@ service:
     
     # Metrics telemetry configuration
     metrics:
+      level: "None"  # Valid values: None, Basic, Normal, Detailed
       readers:
         - periodic:
             exporter:

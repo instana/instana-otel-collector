@@ -1,0 +1,458 @@
+# IDOT Operator Chart Values Configuration
+# 
+# This file configures the Instana Distributed OpenTelemetry (IDOT) collectors for Kubernetes monitoring
+# using the OpenTelemetry Operator.
+# It defines two collectors:
+# - daemonset: Runs on every node to collect host-level metrics, kubelet stats, and logs
+# - statefulset: Runs as a single instance to collect cluster-level metrics and events
+#
+# The configuration is expressed in OpenTelemetry Collector syntax.
+#
+# Available parameters:
+#
+# clusterName: "cluster.local"                  # Name for the Kubernetes cluster
+# clusterShortName: "cluster.local"             # Short name of the cluster
+# clusterFullName: "cluster.local"              # Full name of the cluster
+# clusterVersion: "v1.33.3"                     # Version of the cluster
+# clusterDistribution: "kubernetes"             # Name of the cluster distribution
+# clusterManagedBy: "provider"                  # Name of the organization managing the cluster
+#
+# namespaceName: "default"                      # Namespace of the Kubernetes cluster
+#
+# serviceInstanceId: "otelk8sid"                # Service instance ID for tracing
+# serviceName: "otelk8s"                        # Service name for use in tracing
+#
+# INSTANA_PLUGIN: "k8s"                         # Mandatory constant for use internally by Instana
+#
+# instanaEndpoint: "localhost:4317"             # The Instana backend endpoint or Instana Agent endpoint
+# instanaKey: "instanalocal"                    # The Instana agent key to use
+#
+# OpenShift-specific configuration
+#
+# openshift:
+#   # Enable OpenShift mode explicitly (overrides auto-detection)
+#   enabled: false 
+#   # Enable automatic OpenShift detection (default: true)
+#   autoDetect: true
+#   # DaemonSet-specific OpenShift configuration
+#   daemonset:
+#     # When true, creates a privileged SCC
+#     usePrivilegedServiceAccount: true
+#
+# | Preset               | DaemonSet | StatefulSet | Description                           |
+# | -------------------- | --------- | ----------- | ------------------------------------- |
+# | kubernetesAttributes | Yes       | Yes         | Enrich telemetry with K8s metadata    |
+# | kubeletMetrics       | Yes       | No          | Collect node and pod metrics          |
+# | hostMetrics          | Yes       | No          | Collect host-level CPU/mem/disk       |
+# | logsCollection       | No        | No          | Collect application/container logs    |
+# | kubernetesEvents     | No        | Yes         | Collect Kubernetes event stream       |
+# | clusterMetrics       | No        | Yes         | Collect cluster-wide resource metrics |
+
+
+# OpenShift-specific configuration
+openshift:
+  enabled: false
+  autoDetect: true
+  daemonset:
+    usePrivilegedServiceAccount: true
+
+# OpenTelemetry Operator configuration
+opentelemetry-operator:
+  fullnameOverride: instana-otel-operator
+  admissionWebhooks:
+    namePrefix: instana-otel-operator
+    create: true
+    certManager:
+      enabled: false
+    autoGenerateCert:
+      enabled: true
+
+  # Default configuration for the OpenTelemetry Operator
+  manager:
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 64Mi
+
+# Instana OpenTelemetry Collector configuration
+instana:
+  # Common configuration
+  image:
+    repository: icr.io/instana/idot
+    tag: latest
+    pullPolicy: IfNotPresent
+  
+  # # Instana connection details
+  # endpoint: "https://otlp-fake-saas.instana.io:4317"  # Required: Instana backend endpoint (e.g., https://ingress-red-saas.instana.io:4317)
+  # key: "***************************"                  # Required: Instana agent key
+  
+  # # Cluster metadata
+  # cluster:
+  #   name: "kubernetes-cluster"  # Name for the Kubernetes cluster
+  #   id: ""                      # Unique identifier for the cluster
+  #   distribution: "kubernetes"  # Kubernetes distribution type
+  
+  # DaemonSet collector configuration
+  daemonset:
+    enabled: true
+    name: "idot-daemonset"
+    
+    # Security context for the DaemonSet collector
+    securityContext:
+      privileged: true
+      runAsUser: 0
+      runAsGroup: 0
+    
+    # Node tolerations
+    tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      - key: CriticalAddonsOnly
+        operator: Exists
+        effect: NoExecute
+    
+    # Volume mounts and volumes
+    volumeMounts:
+      - name: tmp-volume
+        mountPath: /tmp
+      - name: etc-passwd
+        mountPath: /etc/passwd
+        readOnly: true
+    
+    volumes:
+      - name: tmp-volume
+        emptyDir: {}
+      - name: etc-passwd
+        hostPath:
+          path: /etc/passwd
+          type: File
+    
+    extraEnvsFrom:
+      - configMapRef:
+          name: idot-env-config # Loads environment variables (Instana keys, endpoint, etc.)
+    # Collector configuration
+    config:
+      receivers:
+        hostmetrics:
+          collection_interval: 30s
+          scrapers:
+            cpu: {}
+            disk: {}
+            filesystem: {}
+            load: {}
+            memory: {}
+            network: {}
+            paging: {}
+            process: {}
+        kubeletstats:
+          collection_interval: 30s
+          auth_type: "serviceAccount"
+          endpoint: "https://${env:K8S_NODE_NAME}:10250"
+          insecure_skip_verify: true
+          metric_groups:
+            - node
+            - pod
+            - container
+          extra_metadata_labels:
+            - container.id
+        otlp:
+          protocols:
+            grpc:
+              endpoint: ${env:MY_POD_IP}:4317
+            http:
+              endpoint: ${env:MY_POD_IP}:4318
+      processors:
+        memory_limiter:
+          check_interval: 1s
+          limit_percentage: 50
+          spike_limit_percentage: 10
+        groupbyattrs/grouping:
+          keys: [k8s.cluster.uid]
+        k8sattributes:
+          auth_type: 'serviceAccount'
+          extract:
+            metadata:
+              - k8s.namespace.name   
+              - k8s.deployment.name
+              - k8s.statefulset.name
+              - k8s.daemonset.name
+              - k8s.cronjob.name
+              - k8s.job.name
+              - k8s.node.name
+              - k8s.pod.name
+              - k8s.pod.uid
+              - k8s.pod.start_time
+              - k8s.node.uid
+              - k8s.cluster.uid
+              - container.id
+          pod_association:
+            - sources:
+                - from: resource_attribute
+                  name: k8s.pod.ip
+            - sources:
+                - from: resource_attribute
+                  name: k8s.pod.uid
+            - sources:
+                - from: resource_attribute
+                  name: k8s.node.name
+            - sources:
+                - from: connection
+        transform/severity_parse:
+          log_statements:
+            - context: log
+              statements:
+                - set(severity_text, "Info")  where IsMatch(body.string, ".*INFO.*")
+                - set(severity_text, "Warn")  where IsMatch(body.string, ".*WARN.*")
+                - set(severity_text, "Error") where IsMatch(body.string, ".*ERROR.*")
+                - set(severity_text, "Fatal") where IsMatch(body.string, ".*FATAL.*")
+        resourcedetection/env:
+          detectors:
+            - env
+        transform/resource_adjustments:
+          error_mode: ignore
+          metric_statements:
+            - context: resource
+              statements:
+                - set(resource.attributes["INSTANA_PLUGIN"], "k8s") where resource.attributes["k8s.cluster.uid"] != nil and resource.attributes["entity.type"] != "otel-collector"
+                - set(resource.attributes["service.name"], resource.attributes["k8s.cluster.name"]) where resource.attributes["entity.type"] == "otel-collector"
+          trace_statements:
+            - context: resource
+              statements:
+                - set(resource.attributes["INSTANA_PLUGIN"], "k8s") where resource.attributes["k8s.cluster.uid"] != nil and resource.attributes["entity.type"] != "otel-collector"
+                - set(resource.attributes["service.name"], resource.attributes["k8s.cluster.name"]) where resource.attributes["entity.type"] == "otel-collector"
+          log_statements:
+            - context: resource
+              statements:
+                - set(resource.attributes["INSTANA_PLUGIN"], "k8s") where resource.attributes["k8s.cluster.uid"] != nil and resource.attributes["entity.type"] != "otel-collector"
+                - set(resource.attributes["service.name"], resource.attributes["k8s.cluster.name"]) where resource.attributes["entity.type"] == "otel-collector"
+        batch: {}
+      exporters:
+        otlp/instana:
+          endpoint: '${env:INSTANA_ENDPOINT}'
+          tls:
+            insecure: false
+          headers:
+            x-instana-key: '${env:INSTANA_KEY}'
+            x-instana-host: '${env:HOSTNAME:-hostname}'
+        debug: {}
+      service:
+        pipelines:
+          metrics:
+            receivers:
+            - otlp
+            - hostmetrics
+            - kubeletstats
+            exporters:
+            - otlp/instana
+            processors:
+            - resourcedetection/env
+            - k8sattributes
+            - memory_limiter
+            - transform/resource_adjustments
+            - batch
+          logs:
+            receivers:
+            - otlp
+            exporters:
+            - otlp/instana
+            processors:
+            - resourcedetection/env
+            - k8sattributes
+            - memory_limiter
+            - transform/resource_adjustments
+            - batch
+          traces:
+            receivers:
+            - otlp
+            exporters:
+            - otlp/instana
+            processors:
+            - resourcedetection/env
+            - k8sattributes
+            - memory_limiter
+            - transform/resource_adjustments
+            - batch
+        telemetry:
+          metrics:
+            readers:
+              - periodic:
+                  exporter:
+                    otlp:
+                      protocol: http/protobuf
+                      endpoint: http://${env:MY_POD_IP}:4318
+          logs:
+            level: INFO
+            processors:
+              - batch:
+                  exporter:
+                    otlp:
+                      protocol: http/protobuf
+                      endpoint: http://${env:MY_POD_IP}:4318
+          resource:
+            service.name: ${env:INSTANA_OTEL_SERVICE_NAME:-otel-collector}
+            service.version: ${env:INSTANA_OTEL_SERVICE_VERSION}
+            service.instance.id: ${env:HOSTNAME}
+            entity.type: ${env:INSTANA_OTEL_ENTITY_TYPE:-otel-collector}
+  
+  # StatefulSet collector configuration
+  statefulset:
+    enabled: true
+    name: "idot-statefulset"
+    replicas: 1
+    
+    extraEnvsFrom:
+      - configMapRef:
+          name: idot-env-config # Loads environment variables (Instana keys, endpoint, etc.)
+    # Collector configuration
+    config:
+      receivers:
+        otlp:
+          protocols:
+            grpc:
+              endpoint: ${env:MY_POD_IP}:4317
+            http:
+              endpoint: ${env:MY_POD_IP}:4318
+        k8s_cluster:
+          collection_interval: 30s
+          node_conditions_to_report: ["Ready", "MemoryPressure", "DiskPressure", "NetworkUnavailable", "PIDPressure"]
+          allocatable_types_to_report: ["cpu", "memory", "storage", "ephemeral-storage"]
+          distribution: ${env:K8S_DISTRIBUTION:-kubernetes}
+        k8s_events:
+          auth_type: serviceAccount
+      processors:
+        memory_limiter:
+          check_interval: 1s
+          limit_percentage: 50
+          spike_limit_percentage: 10
+        groupbyattrs/grouping:
+          keys: [k8s.cluster.uid]
+        k8sattributes:
+          auth_type: 'serviceAccount'
+          extract:
+            metadata:
+              - k8s.namespace.name   
+              - k8s.deployment.name
+              - k8s.statefulset.name
+              - k8s.daemonset.name
+              - k8s.cronjob.name
+              - k8s.job.name
+              - k8s.node.name
+              - k8s.pod.name
+              - k8s.pod.uid
+              - k8s.pod.start_time
+              - k8s.node.uid
+              - k8s.cluster.uid
+          pod_association:
+            - sources:
+                - from: resource_attribute
+                  name: k8s.pod.ip
+            - sources:
+                - from: resource_attribute
+                  name: k8s.pod.uid
+            - sources:
+                - from: resource_attribute
+                  name: k8s.namespace.name
+            - sources:
+                - from: resource_attribute
+                  name: k8s.namespace.uid
+            - sources:
+                - from: resource_attribute
+                  name: k8s.node.name
+            - sources:
+                - from: connection
+        resourcedetection/env:
+          detectors:
+            - env
+        transform/resource_adjustments:
+          error_mode: ignore
+          metric_statements:
+            - context: resource
+              statements:
+                - set(resource.attributes["INSTANA_PLUGIN"], "k8s") where resource.attributes["k8s.cluster.uid"] != nil and resource.attributes["entity.type"] != "otel-collector"
+                - set(resource.attributes["service.name"], resource.attributes["k8s.cluster.name"]) where resource.attributes["entity.type"] == "otel-collector"
+          trace_statements:
+            - context: resource
+              statements:
+                - set(resource.attributes["INSTANA_PLUGIN"], "k8s") where resource.attributes["k8s.cluster.uid"] != nil and resource.attributes["entity.type"] != "otel-collector"
+                - set(resource.attributes["service.name"], resource.attributes["k8s.cluster.name"]) where resource.attributes["entity.type"] == "otel-collector"
+          log_statements:
+            - context: resource
+              statements:
+                - set(resource.attributes["INSTANA_PLUGIN"], "k8s") where resource.attributes["k8s.cluster.uid"] != nil and resource.attributes["entity.type"] != "otel-collector"
+                - set(resource.attributes["service.name"], resource.attributes["k8s.cluster.name"]) where resource.attributes["entity.type"] == "otel-collector"
+        batch: {}
+      exporters:
+        otlp/instana:
+          endpoint: '${env:INSTANA_ENDPOINT}'
+          tls:
+            insecure: false
+          headers:
+            x-instana-key: '${env:INSTANA_KEY}'
+            x-instana-host: '${env:HOSTNAME:-hostname}'
+        debug: {}
+      service:
+        pipelines:
+          metrics:
+            receivers:
+            - otlp
+            - k8s_cluster
+            exporters:
+            - otlp/instana
+            processors:
+            - resourcedetection/env
+            - k8sattributes
+            - memory_limiter
+            - transform/resource_adjustments
+            - batch
+          logs:
+            receivers:
+            - otlp
+            - k8s_events
+            exporters:
+            - otlp/instana
+            processors:
+            - resourcedetection/env
+            - k8sattributes
+            - memory_limiter
+            - transform/resource_adjustments
+            - batch
+          traces:
+            receivers:
+            - otlp
+            exporters:
+            - otlp/instana
+            processors:
+            - resourcedetection/env
+            - k8sattributes
+            - memory_limiter
+            - transform/resource_adjustments
+            - batch
+        telemetry:
+          metrics:
+            readers:
+              - periodic:
+                  exporter:
+                    otlp:
+                      protocol: http/protobuf
+                      endpoint: http://${env:MY_POD_IP}:4318
+          logs:
+            level: INFO
+            processors:
+              - batch:
+                  exporter:
+                    otlp:
+                      protocol: http/protobuf
+                      endpoint: http://${env:MY_POD_IP}:4318
+          resource:
+            service.name: ${env:INSTANA_OTEL_SERVICE_NAME:-otel-collector}
+            service.version: ${env:INSTANA_OTEL_SERVICE_VERSION}
+            service.instance.id: ${env:HOSTNAME}
+            entity.type: ${env:INSTANA_OTEL_ENTITY_TYPE:-otel-collector}
+

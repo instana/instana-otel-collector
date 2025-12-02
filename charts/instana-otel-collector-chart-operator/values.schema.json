@@ -91,5 +91,6 @@
     "clusterName",
     "daemonset",
     "statefulset"
-  ]
+  ],
+  "additionalProperties": true
 }

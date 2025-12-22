@@ -1,4 +1,7 @@
-package utility // import "github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor/internal/utility"
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
+
+package utility // import "github.com/open-telemetry/opentelemetry-collector-contrib/processor/spanintentprocessor/internal/utility"
 
 import (
 	"math"

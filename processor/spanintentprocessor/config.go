@@ -1,24 +1,27 @@
-package spanintentprocessor // import "github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor"
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
+
+package spanintentprocessor // import "github.com/open-telemetry/opentelemetry-collector-contrib/processor/spanintentprocessor"
 
 import (
 	"fmt"
 
-	"go.opentelemetry.io/collector/component"
-	"go.opentelemetry.io/collector/processor"
+	//"go.opentelemetry.io/collector/component"
+	//"go.opentelemetry.io/collector/processor"
 )
 
-var typeStr = component.MustNewType("spanintentprocessor")
+//var typeStr = component.MustNewType("spanintentprocessor")
 
 // SamplingBias controls the bias multipliers for different categories of traces.
 type SamplingBias struct {
 	Normal   float64 `mapstructure:"normal"`
 	Degraded float64 `mapstructure:"degraded"`
-	Failed   float64 `mapstructure:"failed"`
+	Outlier   float64 `mapstructure:"outlier"`
 }
 
 // Config defines the processor configuration.
 type Config struct {
-	processor.Settings `mapstructure:",squash"` // component.ProcessorSettings `mapstructure:",squash"`
+	//processor.Settings `mapstructure:",squash"` // component.ProcessorSettings `mapstructure:",squash"`
 
 	// SamplingPercentage is the base percentage of traces to sample (0.0 to 1.0)
 	SamplingPercentage float64 `mapstructure:"sampling_percentage"`
@@ -33,11 +36,9 @@ type Config struct {
 
 func DefaultConfig() *Config {
 	return &Config{
-		Settings: processor.Settings{
-			ID: component.NewID(typeStr),
-		},
+		//Settings: processor.Settings{ID: component.NewID(typeStr),},
 		SamplingPercentage:       0.3,
-		SamplingBias:             SamplingBias{Normal: 0.3, Degraded: 1.0, Failed: 1.0},
+		SamplingBias:             SamplingBias{Normal: 0.3, Degraded: 1.0, Outlier: 1.0},
 		SampledTracesCacheSize:   10000,
 		UnsampledTracesCacheSize: 10000,
 	}
@@ -54,8 +55,8 @@ func (cfg *Config) Validate() error {
 	if cfg.SamplingBias.Degraded < 0 || cfg.SamplingBias.Degraded > 1 {
 		return fmt.Errorf("sampling_bias.degraded must be between 0.0 and 1.0")
 	}
-	if cfg.SamplingBias.Failed < 0 || cfg.SamplingBias.Failed > 1 {
-		return fmt.Errorf("sampling_bias.failed must be between 0.0 and 1.0")
+	if cfg.SamplingBias.Outlier < 0 || cfg.SamplingBias.Outlier > 1 {
+		return fmt.Errorf("sampling_bias.outlier must be between 0.0 and 1.0")
 	}
 	if cfg.SampledTracesCacheSize <= 0 {
 		return fmt.Errorf("sampled_traces_cache_size must be positive")

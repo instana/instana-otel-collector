@@ -53,21 +53,6 @@ func AssertEqualProcessorSpanintentNewTraceIDReceived(t *testing.T, tt *componen
 	metricdatatest.AssertEqual(t, want, got, opts...)
 }
 
-func AssertEqualProcessorSpanintentProcessingDuration(t *testing.T, tt *componenttest.Telemetry, dps []metricdata.HistogramDataPoint[float64], opts ...metricdatatest.Option) {
-	want := metricdata.Metrics{
-		Name:        "otelcol_processor_spanintent_processing_duration",
-		Description: "Duration of the span intent processor's main processing loop (processBufferedSpans).",
-		Unit:        "ms",
-		Data: metricdata.Histogram[float64]{
-			Temporality: metricdata.CumulativeTemporality,
-			DataPoints:  dps,
-		},
-	}
-	got, err := tt.GetMetric("otelcol_processor_spanintent_processing_duration")
-	require.NoError(t, err)
-	metricdatatest.AssertEqual(t, want, got, opts...)
-}
-
 func AssertEqualProcessorSpanintentSampledCacheHits(t *testing.T, tt *componenttest.Telemetry, dps []metricdata.DataPoint[int64], opts ...metricdatatest.Option) {
 	want := metricdata.Metrics{
 		Name:        "otelcol_processor_spanintent_sampled_cache_hits",
@@ -103,7 +88,7 @@ func AssertEqualProcessorSpanintentSampledCacheMisses(t *testing.T, tt *componen
 func AssertEqualProcessorSpanintentSamplingDecisionLatency(t *testing.T, tt *componenttest.Telemetry, dps []metricdata.HistogramDataPoint[float64], opts ...metricdatatest.Option) {
 	want := metricdata.Metrics{
 		Name:        "otelcol_processor_spanintent_sampling_decision_latency",
-		Description: "Latency of making a sampling decision for a single trace",
+		Description: "Latency of making a sampling decision for a single trace.",
 		Unit:        "us",
 		Data: metricdata.Histogram[float64]{
 			Temporality: metricdata.CumulativeTemporality,
@@ -127,6 +112,38 @@ func AssertEqualProcessorSpanintentSpansReceived(t *testing.T, tt *componenttest
 		},
 	}
 	got, err := tt.GetMetric("otelcol_processor_spanintent_spans_received")
+	require.NoError(t, err)
+	metricdatatest.AssertEqual(t, want, got, opts...)
+}
+
+func AssertEqualProcessorSpanintentSpansSampled(t *testing.T, tt *componenttest.Telemetry, dps []metricdata.DataPoint[int64], opts ...metricdatatest.Option) {
+	want := metricdata.Metrics{
+		Name:        "otelcol_processor_spanintent_spans_sampled",
+		Description: "Number of spans sampled by the span intent processor.",
+		Unit:        "{spans}",
+		Data: metricdata.Sum[int64]{
+			Temporality: metricdata.CumulativeTemporality,
+			IsMonotonic: true,
+			DataPoints:  dps,
+		},
+	}
+	got, err := tt.GetMetric("otelcol_processor_spanintent_spans_sampled")
+	require.NoError(t, err)
+	metricdatatest.AssertEqual(t, want, got, opts...)
+}
+
+func AssertEqualProcessorSpanintentSpansUnsampled(t *testing.T, tt *componenttest.Telemetry, dps []metricdata.DataPoint[int64], opts ...metricdatatest.Option) {
+	want := metricdata.Metrics{
+		Name:        "otelcol_processor_spanintent_spans_unsampled",
+		Description: "Number of spans unsampled by the span intent processor.",
+		Unit:        "{spans}",
+		Data: metricdata.Sum[int64]{
+			Temporality: metricdata.CumulativeTemporality,
+			IsMonotonic: true,
+			DataPoints:  dps,
+		},
+	}
+	got, err := tt.GetMetric("otelcol_processor_spanintent_spans_unsampled")
 	require.NoError(t, err)
 	metricdatatest.AssertEqual(t, want, got, opts...)
 }
@@ -157,22 +174,6 @@ func AssertEqualProcessorSpanintentTracesClassifiedTotal(t *testing.T, tt *compo
 		},
 	}
 	got, err := tt.GetMetric("otelcol_processor_spanintent_traces_classified_total")
-	require.NoError(t, err)
-	metricdatatest.AssertEqual(t, want, got, opts...)
-}
-
-func AssertEqualProcessorSpanintentTracesProcessed(t *testing.T, tt *componenttest.Telemetry, dps []metricdata.DataPoint[int64], opts ...metricdatatest.Option) {
-	want := metricdata.Metrics{
-		Name:        "otelcol_processor_spanintent_traces_processed",
-		Description: "Number of traces processed by the span intent processor.",
-		Unit:        "{traces}",
-		Data: metricdata.Sum[int64]{
-			Temporality: metricdata.CumulativeTemporality,
-			IsMonotonic: true,
-			DataPoints:  dps,
-		},
-	}
-	got, err := tt.GetMetric("otelcol_processor_spanintent_traces_processed")
 	require.NoError(t, err)
 	metricdatatest.AssertEqual(t, want, got, opts...)
 }

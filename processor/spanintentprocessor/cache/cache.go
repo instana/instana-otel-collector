@@ -1,6 +1,7 @@
-package cache // import "github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor/cache"
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
 
-// import "fmt"
+package cache
 
 // NewCache creates a new Cache instance with given size.
 // If size <= 0, returns a no-op cache.

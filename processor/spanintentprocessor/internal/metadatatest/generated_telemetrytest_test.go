@@ -10,9 +10,8 @@ import (
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata/metricdatatest"
 
-	"go.opentelemetry.io/collector/component/componenttest"
-
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/spanintentprocessor/internal/metadata"
+	"go.opentelemetry.io/collector/component/componenttest"
 )
 
 func TestSetupTelemetry(t *testing.T) {
@@ -22,14 +21,14 @@ func TestSetupTelemetry(t *testing.T) {
 	defer tb.Shutdown()
 	tb.ProcessorSpanintentErrorsTotal.Add(context.Background(), 1)
 	tb.ProcessorSpanintentNewTraceIDReceived.Add(context.Background(), 1)
-	tb.ProcessorSpanintentProcessingDuration.Record(context.Background(), 1)
 	tb.ProcessorSpanintentSampledCacheHits.Add(context.Background(), 1)
 	tb.ProcessorSpanintentSampledCacheMisses.Add(context.Background(), 1)
 	tb.ProcessorSpanintentSamplingDecisionLatency.Record(context.Background(), 1)
 	tb.ProcessorSpanintentSpansReceived.Add(context.Background(), 1)
+	tb.ProcessorSpanintentSpansSampled.Add(context.Background(), 1)
+	tb.ProcessorSpanintentSpansUnsampled.Add(context.Background(), 1)
 	tb.ProcessorSpanintentTraceBufferSize.Record(context.Background(), 1)
 	tb.ProcessorSpanintentTracesClassifiedTotal.Add(context.Background(), 1)
-	tb.ProcessorSpanintentTracesProcessed.Add(context.Background(), 1)
 	tb.ProcessorSpanintentTracesSampled.Add(context.Background(), 1)
 	tb.ProcessorSpanintentTracesUnsampled.Add(context.Background(), 1)
 	tb.ProcessorSpanintentUnsampledCacheHits.Add(context.Background(), 1)
@@ -39,9 +38,6 @@ func TestSetupTelemetry(t *testing.T) {
 		metricdatatest.IgnoreTimestamp())
 	AssertEqualProcessorSpanintentNewTraceIDReceived(t, testTel,
 		[]metricdata.DataPoint[int64]{{Value: 1}},
-		metricdatatest.IgnoreTimestamp())
-	AssertEqualProcessorSpanintentProcessingDuration(t, testTel,
-		[]metricdata.HistogramDataPoint[float64]{{}}, metricdatatest.IgnoreValue(),
 		metricdatatest.IgnoreTimestamp())
 	AssertEqualProcessorSpanintentSampledCacheHits(t, testTel,
 		[]metricdata.DataPoint[int64]{{Value: 1}},
@@ -55,13 +51,16 @@ func TestSetupTelemetry(t *testing.T) {
 	AssertEqualProcessorSpanintentSpansReceived(t, testTel,
 		[]metricdata.DataPoint[int64]{{Value: 1}},
 		metricdatatest.IgnoreTimestamp())
+	AssertEqualProcessorSpanintentSpansSampled(t, testTel,
+		[]metricdata.DataPoint[int64]{{Value: 1}},
+		metricdatatest.IgnoreTimestamp())
+	AssertEqualProcessorSpanintentSpansUnsampled(t, testTel,
+		[]metricdata.DataPoint[int64]{{Value: 1}},
+		metricdatatest.IgnoreTimestamp())
 	AssertEqualProcessorSpanintentTraceBufferSize(t, testTel,
 		[]metricdata.DataPoint[int64]{{Value: 1}},
 		metricdatatest.IgnoreTimestamp())
 	AssertEqualProcessorSpanintentTracesClassifiedTotal(t, testTel,
-		[]metricdata.DataPoint[int64]{{Value: 1}},
-		metricdatatest.IgnoreTimestamp())
-	AssertEqualProcessorSpanintentTracesProcessed(t, testTel,
 		[]metricdata.DataPoint[int64]{{Value: 1}},
 		metricdatatest.IgnoreTimestamp())
 	AssertEqualProcessorSpanintentTracesSampled(t, testTel,

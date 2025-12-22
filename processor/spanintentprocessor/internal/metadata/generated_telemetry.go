@@ -28,14 +28,14 @@ type TelemetryBuilder struct {
 	registrations                              []metric.Registration
 	ProcessorSpanintentErrorsTotal             metric.Int64Counter
 	ProcessorSpanintentNewTraceIDReceived      metric.Int64Counter
-	ProcessorSpanintentProcessingDuration      metric.Float64Histogram
 	ProcessorSpanintentSampledCacheHits        metric.Int64Counter
 	ProcessorSpanintentSampledCacheMisses      metric.Int64Counter
 	ProcessorSpanintentSamplingDecisionLatency metric.Float64Histogram
 	ProcessorSpanintentSpansReceived           metric.Int64Counter
+	ProcessorSpanintentSpansSampled            metric.Int64Counter
+	ProcessorSpanintentSpansUnsampled          metric.Int64Counter
 	ProcessorSpanintentTraceBufferSize         metric.Int64Gauge
 	ProcessorSpanintentTracesClassifiedTotal   metric.Int64Counter
-	ProcessorSpanintentTracesProcessed         metric.Int64Counter
 	ProcessorSpanintentTracesSampled           metric.Int64Counter
 	ProcessorSpanintentTracesUnsampled         metric.Int64Counter
 	ProcessorSpanintentUnsampledCacheHits      metric.Int64Counter
@@ -83,12 +83,6 @@ func NewTelemetryBuilder(settings component.TelemetrySettings, options ...Teleme
 		metric.WithUnit("{traces}"),
 	)
 	errs = errors.Join(errs, err)
-	builder.ProcessorSpanintentProcessingDuration, err = builder.meter.Float64Histogram(
-		"otelcol_processor_spanintent_processing_duration",
-		metric.WithDescription("Duration of the span intent processor's main processing loop (processBufferedSpans)."),
-		metric.WithUnit("ms"),
-	)
-	errs = errors.Join(errs, err)
 	builder.ProcessorSpanintentSampledCacheHits, err = builder.meter.Int64Counter(
 		"otelcol_processor_spanintent_sampled_cache_hits",
 		metric.WithDescription("Number of hits in the sampled traces cache."),
@@ -103,13 +97,25 @@ func NewTelemetryBuilder(settings component.TelemetrySettings, options ...Teleme
 	errs = errors.Join(errs, err)
 	builder.ProcessorSpanintentSamplingDecisionLatency, err = builder.meter.Float64Histogram(
 		"otelcol_processor_spanintent_sampling_decision_latency",
-		metric.WithDescription("Latency of making a sampling decision for a single trace"),
+		metric.WithDescription("Latency of making a sampling decision for a single trace."),
 		metric.WithUnit("us"),
 	)
 	errs = errors.Join(errs, err)
 	builder.ProcessorSpanintentSpansReceived, err = builder.meter.Int64Counter(
 		"otelcol_processor_spanintent_spans_received",
 		metric.WithDescription("Number of spans received by the span intent processor."),
+		metric.WithUnit("{spans}"),
+	)
+	errs = errors.Join(errs, err)
+	builder.ProcessorSpanintentSpansSampled, err = builder.meter.Int64Counter(
+		"otelcol_processor_spanintent_spans_sampled",
+		metric.WithDescription("Number of spans sampled by the span intent processor."),
+		metric.WithUnit("{spans}"),
+	)
+	errs = errors.Join(errs, err)
+	builder.ProcessorSpanintentSpansUnsampled, err = builder.meter.Int64Counter(
+		"otelcol_processor_spanintent_spans_unsampled",
+		metric.WithDescription("Number of spans unsampled by the span intent processor."),
 		metric.WithUnit("{spans}"),
 	)
 	errs = errors.Join(errs, err)
@@ -122,12 +128,6 @@ func NewTelemetryBuilder(settings component.TelemetrySettings, options ...Teleme
 	builder.ProcessorSpanintentTracesClassifiedTotal, err = builder.meter.Int64Counter(
 		"otelcol_processor_spanintent_traces_classified_total",
 		metric.WithDescription("Total number of traces classified by intent."),
-		metric.WithUnit("{traces}"),
-	)
-	errs = errors.Join(errs, err)
-	builder.ProcessorSpanintentTracesProcessed, err = builder.meter.Int64Counter(
-		"otelcol_processor_spanintent_traces_processed",
-		metric.WithDescription("Number of traces processed by the span intent processor."),
 		metric.WithUnit("{traces}"),
 	)
 	errs = errors.Join(errs, err)

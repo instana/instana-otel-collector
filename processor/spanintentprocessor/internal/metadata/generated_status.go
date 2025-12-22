@@ -8,7 +8,7 @@ import (
 
 var (
 	Type      = component.MustNewType("spanintent")
-	ScopeName = "github.com/open-telemetry/opentelemetry-collector-contrib/processor/spanintentprocessor"
+	ScopeName = "github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor"
 )
 
 const (

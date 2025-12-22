@@ -1,6 +1,6 @@
 # SpanIntent Processor
 
-The **SpanIntent Processor** samples traces based on span-level behaviors, guided by predefined sampling policies. The processor’s core principle is that a trace’s importance—its ability to represent real application usage—is derived from the characteristics of its spans. Traces are classified as **normal**, **degraded**, or **failed** according to span latency and error patterns.
+The **SpanIntent Processor** samples traces based on span-level behaviors, guided by predefined sampling policies. The processor’s core principle is that a trace’s importance, that is, its ability to represent real application usage, can be derived from the characteristics of its spans. Traces are classified as **normal**, **degraded**, or **outlier** based on their span latency and error patterns.
 
 ## Overview
 
@@ -19,7 +19,7 @@ The following configuration options are required:
 - `sampling_bias`: Defines bias multipliers for different categories of traces (e.g., to prioritize degraded or failed traces over normal ones).
 	- `normal`: The proportion of normal traces to be sampled, as determined by the configured sampling_percentage
 	- `degraded`: The proportion of degraded traces to be sampled, as determined by the configured sampling_percentage
-	- `failed`: The proportion of failed traces to be sampled, as determined by the configured sampling_percentage
+	- `outlier`: The proportion of failed traces to be sampled, as determined by the configured sampling_percentage
 - `sampled_traces_cache_size`: The maximum size of the cache for sampled traces, used to prevent reprocessing traces already selected for sampling.
 - `unsampled_traces_cache_size`: The maximum size of the cache for unsampled traces, used to skip traces previously determined to be excluded from sampling.
 
@@ -33,7 +33,7 @@ processors:
     sampling_bias:
       normal: 0.5
       degraded: 0.7
-      failed: 0.9
+      outlier: 0.9
     sampled_traces_cache_size: 1000
     unsampled_traces_cache_size: 1000
 

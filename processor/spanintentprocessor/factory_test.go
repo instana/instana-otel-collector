@@ -42,8 +42,6 @@ func TestCreateTracesProcessor(t *testing.T) {
         assert.NotNil(t, tp)
         assert.NoError(t, err, "cannot create spanintent processor")
 
-        // this will cause the processor to properly initialize, so that we can later shutdown and
-        // have all the go routines cleanly shut down
         assert.NoError(t, tp.Start(context.Background(), componenttest.NewNopHost()))
         assert.NoError(t, tp.Shutdown(context.Background()))
 }

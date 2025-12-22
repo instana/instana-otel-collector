@@ -13,11 +13,11 @@ import (
 )
 
 func Meter(settings component.TelemetrySettings) metric.Meter {
-	return settings.MeterProvider.Meter("github.com/open-telemetry/opentelemetry-collector-contrib/processor/spanintentprocessor")
+	return settings.MeterProvider.Meter("github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor")
 }
 
 func Tracer(settings component.TelemetrySettings) trace.Tracer {
-	return settings.TracerProvider.Tracer("github.com/open-telemetry/opentelemetry-collector-contrib/processor/spanintentprocessor")
+	return settings.TracerProvider.Tracer("github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor")
 }
 
 // TelemetryBuilder provides an interface for components to report telemetry
@@ -86,13 +86,13 @@ func NewTelemetryBuilder(settings component.TelemetrySettings, options ...Teleme
 	builder.ProcessorSpanintentSampledCacheHits, err = builder.meter.Int64Counter(
 		"otelcol_processor_spanintent_sampled_cache_hits",
 		metric.WithDescription("Number of hits in the sampled traces cache."),
-		metric.WithUnit("{spans}"),
+		metric.WithUnit("{traces}"),
 	)
 	errs = errors.Join(errs, err)
 	builder.ProcessorSpanintentSampledCacheMisses, err = builder.meter.Int64Counter(
 		"otelcol_processor_spanintent_sampled_cache_misses",
 		metric.WithDescription("Number of misses in the sampled traces cache."),
-		metric.WithUnit("{spans}"),
+		metric.WithUnit("{traces}"),
 	)
 	errs = errors.Join(errs, err)
 	builder.ProcessorSpanintentSamplingDecisionLatency, err = builder.meter.Float64Histogram(

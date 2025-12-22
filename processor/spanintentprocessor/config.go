@@ -10,8 +10,6 @@ import (
 	//"go.opentelemetry.io/collector/processor"
 )
 
-//var typeStr = component.MustNewType("spanintentprocessor")
-
 // SamplingBias controls the bias multipliers for different categories of traces.
 type SamplingBias struct {
 	Normal   float64 `mapstructure:"normal"`
@@ -36,7 +34,6 @@ type Config struct {
 
 func DefaultConfig() *Config {
 	return &Config{
-		//Settings: processor.Settings{ID: component.NewID(typeStr),},
 		SamplingPercentage:       0.3,
 		SamplingBias:             SamplingBias{Normal: 0.3, Degraded: 1.0, Outlier: 1.0},
 		SampledTracesCacheSize:   10000,

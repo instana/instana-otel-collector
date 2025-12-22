@@ -57,7 +57,7 @@ func AssertEqualProcessorSpanintentSampledCacheHits(t *testing.T, tt *componentt
 	want := metricdata.Metrics{
 		Name:        "otelcol_processor_spanintent_sampled_cache_hits",
 		Description: "Number of hits in the sampled traces cache.",
-		Unit:        "{spans}",
+		Unit:        "{traces}",
 		Data: metricdata.Sum[int64]{
 			Temporality: metricdata.CumulativeTemporality,
 			IsMonotonic: true,
@@ -73,7 +73,7 @@ func AssertEqualProcessorSpanintentSampledCacheMisses(t *testing.T, tt *componen
 	want := metricdata.Metrics{
 		Name:        "otelcol_processor_spanintent_sampled_cache_misses",
 		Description: "Number of misses in the sampled traces cache.",
-		Unit:        "{spans}",
+		Unit:        "{traces}",
 		Data: metricdata.Sum[int64]{
 			Temporality: metricdata.CumulativeTemporality,
 			IsMonotonic: true,

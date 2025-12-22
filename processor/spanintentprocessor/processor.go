@@ -31,12 +31,9 @@ type spanIntentProcessor struct {
         telemetry *metadata.TelemetryBuilder
         logger    *zap.Logger
 
-	//logger          *zap.Logger
-	//cfg             *Config
 	nextConsumer    consumer.Traces
 	mu              sync.Mutex
 	tdigestMutex    sync.Mutex
-	//traceDataBuffer map[pcommon.TraceID]*traceData
 	tdigestMap      map[string]*utility.TDigest
 	quantileEMAMap  map[string]*quantileEMA // smoothed q75/q95 for categorization
 	emaAlpha        float64
@@ -50,20 +47,6 @@ type spanIntentProcessor struct {
 	rng          *rand.Rand
 	stopCh          chan struct{}
 
-	// Metrics instruments
-	/*mSpansReceived           metric.Int64Counter
-	mNewTraceIDReceived      metric.Int64Counter
-	mTraceBufferSize         metric.Int64UpDownCounter
-	mSampledCacheHits        metric.Int64Counter
-	mSampledCacheMisses      metric.Int64Counter
-	mUnsampledCacheHits      metric.Int64Counter
-	mUnsampledCacheMisses    metric.Int64Counter
-	mTracesClassifiedTotal   metric.Int64Counter
-	mTracesSampled           metric.Int64Counter
-	mTracesUnsampled         metric.Int64Counter
-	mErrorsTotal             metric.Int64Counter
-	mProcessingDuration      metric.Int64Histogram
-	mSamplingDecisionLatency metric.Int64Histogram*/
 }
 
 type traceData struct {
@@ -72,85 +55,12 @@ type traceData struct {
 	maxLatency    float64
 }
 
-/*func newSpanIntentProcessor(
-	logger *zap.Logger,
-	cfg *Config,
-	nextConsumer consumer.Traces,
-	meter metric.Meter,
-) (*spanIntentProcessor, error) {
-	// Use processor ID from config for context/logging/metrics
-	processorID := cfg.ID.String()*/
 func newSpanIntentProcessor(ctx context.Context, set processor.Settings, nextConsumer consumer.Traces, cfg Config) (processor.Traces, error) {
         telemetrySettings := set.TelemetrySettings
         telemetry, err := metadata.NewTelemetryBuilder(telemetrySettings)
         if err != nil {
                 return nil, err
         }
-
-	//logger.Info("Starting spanintentprocessor", zap.String("id", processorID))
-
-	// Create metric instruments from the meter
-	/*mSpansReceived, err := meter.Int64Counter("processor.spanintent.spans_received")
-	if err != nil {
-		return nil, err
-	}
-	mNewTraceIDReceived, err := meter.Int64Counter("processor.spanintent.new_trace_id_received")
-	if err != nil {
-		return nil, err
-	}
-	mTraceBufferSize, err := meter.Int64UpDownCounter("processor.spanintent.trace_buffer_size")
-	if err != nil {
-		return nil, err
-	}
-	mSampledCacheHits, err := meter.Int64Counter("processor.spanintent.sampled_cache_hits")
-	if err != nil {
-		return nil, err
-	}
-	mSampledCacheMisses, err := meter.Int64Counter("processor.spanintent.sampled_cache_misses")
-	if err != nil {
-		return nil, err
-	}
-	mUnsampledCacheHits, err := meter.Int64Counter("processor.spanintent.unsampled_cache_hits")
-	if err != nil {
-		return nil, err
-	}
-	mUnsampledCacheMisses, err := meter.Int64Counter("processor.spanintent.unsampled_cache_misses")
-	if err != nil {
-		return nil, err
-	}
-	mTracesClassifiedTotal, err := meter.Int64Counter("processor.spanintent.traces_classified_total")
-	if err != nil {
-		return nil, err
-	}
-	mTracesSampled, err := meter.Int64Counter("processor.spanintent.traces_sampled")
-	if err != nil {
-		return nil, err
-	}
-	mTracesUnsampled, err := meter.Int64Counter("processor.spanintent.traces_unsampled")
-	if err != nil {
-		return nil, err
-	}
-	mErrorsTotal, err := meter.Int64Counter("processor.spanintent.errors_total")
-	if err != nil {
-		return nil, err
-	}
-	mProcessingDuration, err := meter.Int64Histogram("processor.spanintent.processing_duration_ms")
-	if err != nil {
-		return nil, err
-	}
-	mSamplingDecisionLatency, err := meter.Int64Histogram("processor.spanintent.sampling_decision_latency_us")
-	if err != nil {
-		return nil, err
-	}
-
-	sampledCache, err := cache.NewCache[bool](cfg.SampledTracesCacheSize)
-	if err != nil {
-		return nil, err
-	}
-	unsampledCache, err := cache.NewCache[bool](cfg.UnsampledTracesCacheSize)
-	if err != nil {
-		return nil, err
-	}*/
 
 	nopCache := cache.NewNopDecisionCache[bool]()
         sampledCache := nopCache
@@ -173,9 +83,8 @@ func newSpanIntentProcessor(ctx context.Context, set processor.Settings, nextCon
 		set:                set,
 		telemetry:          telemetry,
 		logger:          telemetrySettings.Logger, //logger,
-		//cfg:             cfg,
 		nextConsumer:    nextConsumer,
-		//traceDataBuffer: make(map[pcommon.TraceID]*traceData),
+
 		tdigestMap:      make(map[string]*utility.TDigest),
 		quantileEMAMap:  make(map[string]*quantileEMA),
 		seenTraceIDs:	make(map[pcommon.TraceID]struct{}),
@@ -189,19 +98,6 @@ func newSpanIntentProcessor(ctx context.Context, set processor.Settings, nextCon
 		rng: rand.New(rand.NewSource(time.Now().UnixNano())),
 		stopCh:          make(chan struct{}),
 
-		/*mSpansReceived:           mSpansReceived,
-		mNewTraceIDReceived:      mNewTraceIDReceived,
-		mTraceBufferSize:         mTraceBufferSize,
-		mSampledCacheHits:        mSampledCacheHits,
-		mSampledCacheMisses:      mSampledCacheMisses,
-		mUnsampledCacheHits:      mUnsampledCacheHits,
-		mUnsampledCacheMisses:    mUnsampledCacheMisses,
-		mTracesClassifiedTotal:   mTracesClassifiedTotal,
-		mTracesSampled:           mTracesSampled,
-		mTracesUnsampled:         mTracesUnsampled,
-		mErrorsTotal:             mErrorsTotal,
-		mProcessingDuration:      mProcessingDuration,
-		mSamplingDecisionLatency: mSamplingDecisionLatency,*/
 	}, nil
 }
 
@@ -221,11 +117,6 @@ func (p *spanIntentProcessor) Shutdown(ctx context.Context) error {
 	close(p.stopCh)
 	return nil
 }
-
-/*func (p *spanIntentProcessor) init() {
-	p.seenTraceIDs = make(map[pcommon.TraceID]struct{})
-	rand.Seed(time.Now().UnixNano())
-}*/
 
 func (p *spanIntentProcessor) processTraces(ctx context.Context, td ptrace.Traces) (ptrace.Traces, error) {
 	resourceSpans := td.ResourceSpans()
@@ -316,12 +207,6 @@ func (p *spanIntentProcessor) processTraces(ctx context.Context, td ptrace.Trace
 
 				ema = p.quantileEMAMap[key]
 				iqr := ema.Q75 -ema.Q25
-				// Handle the initial span
-				/*if  iqr == 0:
-				{
-					normalSet[traceID] = struct{}{}
-					continue
-				}*/
 				innerFence := ema.Q75 + (1.5 * iqr)
 				outerFence := ema.Q75 + (3.0 * iqr)
 
@@ -349,7 +234,7 @@ func (p *spanIntentProcessor) processTraces(ctx context.Context, td ptrace.Trace
 		p.forwardTrace(tid, data.spans, data.resourceAttrs)
 	}
 
-	p.telemetry.ProcessorSpanintentSamplingDecisionLatency.Record(ctx, float64(time.Since(startTime)/time.Millisecond)) //p.mSamplingDecisionLatency.Record(ctx, int64(time.Since(startTime)/time.Millisecond))
+	p.telemetry.ProcessorSpanintentSamplingDecisionLatency.Record(ctx, float64(time.Since(startTime)/time.Millisecond))
 	return td, nil
 }
 
@@ -381,11 +266,6 @@ func (p *spanIntentProcessor) processTracesForSampling(
             metric.WithAttributes(attribute.String("classification_category", name)))
     }
 
-    /*biasMap := map[string]float64{
-        "normal":   p.cfg.SamplingBias.Normal,
-        "degraded": p.cfg.SamplingBias.Degraded,
-        "failed":   p.cfg.SamplingBias.Failed,
-    }*/
     biasMap := map[string]float64{
 	    "normal":	p.samplingBiasNormal,
 	    "degraded":	p.samplingBiasDegraded,
@@ -402,31 +282,6 @@ func (p *spanIntentProcessor) processTracesForSampling(
     if totalBudget == 0 {
         totalBudget = 1 // Always sample at least one if any traces exist
     }
-
-    /*allocated := make(map[string]int)
-    remainingBudget := totalBudget
-    remainingBias := 0.0
-
-    // Step 2a: Fully allocate bias==1 categories
-    for label, traces := range categories {
-        if biasMap[label] == 1 {
-            allocated[label] = len(traces)
-            remainingBudget -= len(traces)
-        } else {
-            remainingBias += biasMap[label]
-        }
-    }
-
-    // Step 2b: Proportional allocation for others
-    for label, traces := range categories {
-        if biasMap[label] < 1 {
-            alloc := int((biasMap[label] / remainingBias) * float64(remainingBudget))
-            if alloc > len(traces) {
-                alloc = len(traces)
-            }
-            allocated[label] = alloc
-        }
-    }*/
 
     allocated := make(map[string]int)
     remainingBudget := totalBudget
@@ -486,17 +341,11 @@ func (p *spanIntentProcessor) processTracesForSampling(
                 p.sampledTraces.Put(tid, true)
 		p.telemetry.ProcessorSpanintentTracesSampled.Add(context.Background(), 1, metric.WithAttributes(attribute.String("sampling_category", category),))
 		p.telemetry.ProcessorSpanintentSpansSampled.Add(context.Background(), int64(len(trace.spans)), metric.WithAttributes(attribute.String("sampling_category", category),))
-                //p.mTracesSampled.Add(context.Background(), 1, metric.WithAttributes(
-                //    attribute.String("sampling_category", category),
-                //))
                 p.forwardTrace(tid, trace.spans, trace.resourceAttrs)
             } else {
                 p.unsampledTraces.Put(tid, true)
 		p.telemetry.ProcessorSpanintentTracesUnsampled.Add(context.Background(), 1, metric.WithAttributes(attribute.String("sampling_category", category),))
 		p.telemetry.ProcessorSpanintentSpansUnsampled.Add(context.Background(), int64(len(trace.spans)), metric.WithAttributes(attribute.String("sampling_category", category),))
-                /*p.mTracesUnsampled.Add(context.Background(), 1, metric.WithAttributes(
-                    attribute.String("sampling_category", category),
-                ))*/
             }
         }
     }
@@ -546,6 +395,5 @@ func (p *spanIntentProcessor) forwardTrace(traceID pcommon.TraceID, spans []ptra
 	if err := p.nextConsumer.ConsumeTraces(context.Background(), td); err != nil {
 		p.logger.Warn("failed to forward trace", zap.Error(err))
 		p.telemetry.ProcessorSpanintentErrorsTotal.Add(context.Background(), 1, metric.WithAttributes(attribute.String("error_type", "forwarding_failed")))
-		//p.mErrorsTotal.Add(context.Background(), 1, metric.WithAttributes(attribute.String("error_type", "forwarding_failed")))
 	}
 }

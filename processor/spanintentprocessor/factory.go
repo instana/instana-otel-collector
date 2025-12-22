@@ -15,9 +15,6 @@ import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/spanintentprocessor/internal/metadata"
 )
 
-// TypeStr is the component type for the spanintentprocessor.
-//var TypeStr = component.MustNewType("spanintentprocessor")
-
 // NewFactory creates a new factory for the spanintentprocessor.
 func NewFactory() processor.Factory {
 	return processor.NewFactory(
@@ -50,13 +47,5 @@ func createSpanIntentProcessor(
 ) (processor.Traces, error) {
 	config := cfg.(*Config)
 
-	/*_, err := metadata.NewTelemetryBuilder(settings.TelemetrySettings)
-	if err != nil {
-		return nil, err
-	}
-
-	// Pass settings.Meter (implements metric.Meter) instead of telemetry
-	meter := settings.MeterProvider.Meter(config.ID.String())
-	return newSpanIntentProcessor(settings.Logger, config, nextConsumer, meter)*/
 	return newSpanIntentProcessor(ctx, settings, nextConsumer, *config)
 }

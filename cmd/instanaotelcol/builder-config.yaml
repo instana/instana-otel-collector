@@ -81,6 +81,7 @@ processors:
   # Sampling processors
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor v0.136.0           # Tail sampling
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/probabilisticsamplerprocessor v0.136.0   # Probabilistic sampling
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/spanintentprocessor v0.1.0               #SpanIntent sampling processor
   # Enrichment processors
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/k8sattributesprocessor v0.136.0          # K8s attributes
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor v0.136.0      # Resource detection
@@ -101,3 +102,4 @@ exporters:
 # Use local versions of components instead of the published ones
 replaces:
   - github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor => ../../processor/tailsamplingprocessor
+  - github.com/open-telemetry/opentelemetry-collector-contrib/processor/spanintentprocessor => ../../processor/spanintentprocessor

@@ -409,7 +409,7 @@ func (p *spanIntentProcessor) Capabilities() consumer.Capabilities {
 }
 
 func (p *spanIntentProcessor) ConsumeTraces(ctx context.Context, td ptrace.Traces) error {
-	p.logger.Debug("spanintentprocessor received traces")
+	p.logger.Debug("[SpanIntent]: Inside ConsumeTraces")
 	_, err := p.processTraces(ctx, td)
 	return err
 }

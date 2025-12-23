@@ -143,18 +143,18 @@ func (p *spanIntentProcessor) processTraces(ctx context.Context, td ptrace.Trace
 			for k := 0; k < spans.Len(); k++ {
 				span := spans.At(k)
 				traceID := span.TraceID()
-				p.telemetry.ProcessorSpanintentSpansReceived.Add(ctx, 1) //p.mSpansReceived.Add(ctx, 1)
+				p.telemetry.ProcessorSpanintentSpansReceived.Add(ctx, 1)
 
 				p.mu.Lock()
 				if sampled, ok := p.sampledTraces.Get(traceID); ok && sampled {
-					p.telemetry.ProcessorSpanintentSampledCacheHits.Add(ctx, 1) //p.mSampledCacheHits.Add(ctx, 1)
+					p.telemetry.ProcessorSpanintentSampledCacheHits.Add(ctx, 1)
 					traceDataItem := getOrCreateTrace(traceID, resourceAttrs, tracesToForwardImmediately)
 					traceDataItem.spans = append(traceDataItem.spans, span)
 					p.mu.Unlock()
 					continue
 				}
 				if unsampled, ok := p.unsampledTraces.Get(traceID); ok && unsampled {
-					p.telemetry.ProcessorSpanintentUnsampledCacheHits.Add(ctx, 1) //p.mUnsampledCacheHits.Add(ctx, 1)
+					p.telemetry.ProcessorSpanintentUnsampledCacheHits.Add(ctx, 1) 
 					p.mu.Unlock()
 					continue
 				}
@@ -260,7 +260,6 @@ func (p *spanIntentProcessor) processTracesForSampling(
         "outlier":   outlierSet,
     }
 
-    //p.mTracesClassifiedTotal.Add(context.Background(), int64(len(set)),
     for name, set := range categories {
         p.telemetry.ProcessorSpanintentTracesClassifiedTotal.Add(context.Background(), int64(len(set)),
             metric.WithAttributes(attribute.String("classification_category", name)))
@@ -301,19 +300,52 @@ func (p *spanIntentProcessor) processTracesForSampling(
 		    remainingBias += bias
 	    }
     }
-    if remainingBudget > 0 && remainingBias > 0 {
+
+    for remainingBudget > 0 && remainingBias > 0 {
+	    progressMade := false
 	    for label, traces := range categories {
 		    bias := biasMap[label]
-		    if bias < 1 {
-			    alloc := int((bias / remainingBias) * float64(remainingBudget))
-			    if alloc > len(traces) {
-				    alloc = len(traces)
+		    avail := len(traces) - allocated[label]
+		    if bias >= 1 || avail <= 0 {
+			    continue
+		    }
+		    share := (bias / remainingBias) * float64(remainingBudget)
+		    alloc := int(share)
+		    if alloc == 0 && share > 0 {
+			    alloc = 1
+		    }
+
+		    if alloc > avail {
+			    alloc = avail
+		    }
+		    if alloc > remainingBudget {
+			    alloc = remainingBudget
+		    }
+		    if alloc > 0 {
+			    allocated[label] += alloc
+			    p.logger.Debug("Allocating budget", zap.String("category", label), zap.Int("allocated", alloc),)
+			    remainingBudget -= alloc
+			    progressMade = true
+
+			    if allocated[label] == len(traces) {
+				    remainingBias -= bias
 			    }
-			    allocated[label] = alloc
+		    }
+		    if remainingBudget <= 0 {
+			    break
 		    }
 	    }
+	    if !progressMade {
+		    break
+	    }
+    }
+    if remainingBudget > 0 {
+	    p.logger.Debug("Budget not fully exhausted", zap.Int("Remaining Budget", remainingBudget), zap.String("reason", "Total available traces in categories is less than the sampling budget"),)
     }
 
+    for category, set := range categories {
+            p.logger.Debug("Category set size", zap.String("category", category), zap.Int("size", len(set)),zap.Float64("bias", biasMap[category]), zap.Int("allocation budget", allocated[category]), zap.Int("total budget", totalBudget))
+    }
     // Step 3: Random sampling per category
     for category, set := range categories {
         if len(set) == 0 {

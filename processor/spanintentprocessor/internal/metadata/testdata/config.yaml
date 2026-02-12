@@ -1,0 +1,61 @@
+default:
+all_set:
+  metrics:
+    processor_spanintent_errors_total:
+      enabled: true
+    processor_spanintent_new_trace_id_received:
+      enabled: true
+    processor_spanintent_processing_duration:
+      enabled: true
+    processor_spanintent_sampled_cache_hits:
+      enabled: true
+    processor_spanintent_sampled_cache_misses:
+      enabled: true
+    processor_spanintent_sampling_decision_latency:
+      enabled: true
+    processor_spanintent_spans_received:
+      enabled: true
+    processor_spanintent_trace_buffer_size:
+      enabled: true
+    processor_spanintent_traces_classified_total:
+      enabled: true
+    processor_spanintent_traces_processed:
+      enabled: true
+    processor_spanintent_traces_sampled:
+      enabled: true
+    processor_spanintent_traces_unsampled:
+      enabled: true
+    processor_spanintent_unsampled_cache_hits:
+      enabled: true
+    processor_spanintent_unsampled_cache_misses:
+      enabled: true
+none_set:
+  metrics:
+    processor_spanintent_errors_total:
+      enabled: false
+    processor_spanintent_new_trace_id_received:
+      enabled: false
+    processor_spanintent_processing_duration:
+      enabled: false
+    processor_spanintent_sampled_cache_hits:
+      enabled: false
+    processor_spanintent_sampled_cache_misses:
+      enabled: false
+    processor_spanintent_sampling_decision_latency:
+      enabled: false
+    processor_spanintent_spans_received:
+      enabled: false
+    processor_spanintent_trace_buffer_size:
+      enabled: false
+    processor_spanintent_traces_classified_total:
+      enabled: false
+    processor_spanintent_traces_processed:
+      enabled: false
+    processor_spanintent_traces_sampled:
+      enabled: false
+    processor_spanintent_traces_unsampled:
+      enabled: false
+    processor_spanintent_unsampled_cache_hits:
+      enabled: false
+    processor_spanintent_unsampled_cache_misses:
+      enabled: false

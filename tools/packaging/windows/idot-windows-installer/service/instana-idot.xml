@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Windows Service Configuration for Instana OTel Collector
+  This file is used by Windows Service Wrapper (WinSW) to run the collector as a Windows service.
+  
+  Documentation: https://github.com/winsw/winsw
+-->
+<service>
+  <!-- Service Identity -->
+  <id>InstanaOTelCollector</id>
+  <name>Instana OTel Collector</name>
+  <description>Instana Distribution of OpenTelemetry Collector - Collects and exports telemetry data (traces, metrics, and logs) to Instana backend</description>
+  
+  <!-- Executable Configuration -->
+  <executable>%BASE%\bin\instana-otelcol.exe</executable>
+  <arguments>--config=%BASE%\config\config.yaml</arguments>
+  
+  <!-- Working Directory -->
+  <workingdirectory>%BASE%</workingdirectory>
+  
+  <!-- Service Startup -->
+  <startmode>Automatic</startmode>
+  <delayedAutoStart>true</delayedAutoStart>
+  
+  <!-- Service Account -->
+  <serviceaccount>
+    <username>LocalSystem</username>
+  </serviceaccount>
+  
+  <!-- Service Dependencies -->
+  <depend>Tcpip</depend>
+  <depend>Dnscache</depend>
+  
+  <!-- Logging Configuration -->
+  <log mode="roll-by-size">
+    <logpath>%BASE%\logs</logpath>
+    <sizeThreshold>10240</sizeThreshold>
+    <keepFiles>8</keepFiles>
+  </log>
+  
+  <!-- Environment Variables -->
+  <env name="INSTANA_OTEL_SERVICE_NAME" value="otel-collector"/>
+  <env name="INSTANA_OTEL_LOG_LEVEL" value="info"/>
+  
+  <!-- Load environment from config.env file -->
+  <envfile>%BASE%\config\config.env</envfile>
+  
+  <!-- Service Recovery Options -->
+  <onfailure action="restart" delay="60 sec"/>
+  <onfailure action="restart" delay="120 sec"/>
+  <onfailure action="restart" delay="240 sec"/>
+  <resetfailure>1 day</resetfailure>
+  
+  <!-- Process Priority -->
+  <priority>Normal</priority>
+  
+  <!-- Stop Timeout -->
+  <stoptimeout>30 sec</stoptimeout>
+  
+  <!-- Service Shutdown -->
+  <stopparentprocessfirst>true</stopparentprocessfirst>
+  
+  <!-- Security -->
+  <security>
+    <allowServiceLogon>true</allowServiceLogon>
+  </security>
+  
+  <!-- Download and use WinSW if not present -->
+  <download from="https://github.com/winsw/winsw/releases/download/v2.12.0/WinSW-x64.exe" 
+            to="%BASE%\bin\winsw.exe" 
+            failOnError="false"/>
+</service>

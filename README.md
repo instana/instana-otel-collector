@@ -19,7 +19,7 @@
 
 ## Overview
 
-The **Instana Distribution of OpenTelemetry Collector** (IDOT) aims to bring a streamlined OpenTelemetry experience to the Instana ecosystem.
+The **Instana Distibution of OpenTelemetry Collector** (IDOT) aims to bring a streamlined OpenTelemetry experience to the Instana ecosystem.
 
 IDOT was built using the builder found on the [OpenTelemetry GitHub](https://github.com/open-telemetry/opentelemetry-collector) and follows the documentation found on the official [OpenTelemetry Website](https://opentelemetry.io/).
 
@@ -34,6 +34,7 @@ The Instana Distribution of OpenTelemetry Collector supports the following archi
 | OS      | Architectures                 |
 |---------|-------------------------------|
 | Linux   | x86-64 (amd64), s390x (IBM Z) |
+| Windows | x86-64 (amd64)                |
 
 ### Linux Installation
 
@@ -134,9 +135,65 @@ The `Instana Supervisor Service` works akin to the `Instana Collector Service` a
 
 Visit [Kubernetes Deployment Guide](docs/k8s.md) for more information.
 
-### Windows
+### Windows Installation
 
-Coming soon...
+The Windows distribution is available as a portable ZIP archive for easy deployment.
+
+#### Step 1: Download the Windows ZIP package
+
+Download the latest Windows ZIP package from the releases page:
+
+```powershell
+# Download using PowerShell
+Invoke-WebRequest -Uri "https://github.com/instana/instana-otel-collector/releases/latest/download/instana-collector-installer-latest.zip" -OutFile "instana-collector.zip"
+
+# Extract the archive
+Expand-Archive -Path "instana-collector.zip" -DestinationPath "C:\Program Files\Instana\"
+```
+
+Or download manually from: [GitHub Releases](https://github.com/instana/instana-otel-collector/releases/latest)
+
+#### Step 2: Configure the collector
+
+Edit `bin\setenv.bat` to configure your Instana connection:
+
+```batch
+REM Required: Your Instana agent key
+set INSTANA_KEY=your-instana-key-here
+
+REM Required: Instana backend endpoint (HTTP)
+set INSTANA_OTEL_ENDPOINT_HTTP=https://your-instana-backend:4318
+
+REM Optional: Service identification
+set INSTANA_OTEL_SERVICE_NAME=my-service
+set HOSTNAME=%COMPUTERNAME%
+```
+
+#### Step 3: Start the collector
+
+Open Command Prompt as Administrator:
+
+```cmd
+cd "C:\Program Files\Instana\instana-collector\bin"
+start.bat
+```
+
+#### Managing the Collector
+
+The Windows package includes convenient batch scripts for managing the collector:
+
+```cmd
+REM Check collector status
+status.bat
+
+REM Stop the collector
+stop.bat
+
+REM View logs
+type ..\logs\agent.log
+```
+
+For detailed Windows installation instructions, configuration examples, and troubleshooting, see the [Windows Installation Guide](tools/packaging/windows/README.md) included in the ZIP package.
 
 ### MacOS
 
@@ -183,11 +240,11 @@ See the table below for links to supported components
 
 | Component     |  Link                                                                                                  |
 |---------------|--------------------------------------------------------------------------------------------------------|
-| Receivers     | [Receiver List](https://github.com/instana/instana-otel-collector/blob/main/docs/receivers.md)     |
-| Processors    | [Processor List](https://github.com/instana/instana-otel-collector/blob/main/docs/processors.md)   |
-| Exporters     | [Exporter List](https://github.com/instana/instana-otel-collector/blob/main/docs/exporters.md)     |
-| Extensions    | [Extensions List](https://github.com/instana/instana-otel-collector/blob/main/docs/extensions.md)  |
-| Providers     | [Provider List](https://github.com/instana/instana-otel-collector/blob/main/docs/providers.md)      |
+| Receivers     | [Receiver List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/receivers.md)     |
+| Processors    | [Processor List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/processors.md)   |
+| Exporters     | [Exporter List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/exporters.md)     |
+| Extensions    | [Extensions List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/extensions.md)  |
+| Providers     | [Provider List](https://github.ibm.com/instana/instana-otel-collector/blob/main/docs/providers.md)      |
 
 ## OpAmp Support
 

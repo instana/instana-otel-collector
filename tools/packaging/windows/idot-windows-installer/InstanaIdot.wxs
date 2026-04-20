@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+  
+  <?define ProductName = "Instana OTel Collector" ?>
+  <?define ProductVersion = "$(var.Version)" ?>
+  <?define Manufacturer = "IBM Instana" ?>
+  <?define UpgradeCode = "A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D" ?>
+
+  <Product Id="*"
+           Name="$(var.ProductName)"
+           Language="1033"
+           Version="$(var.MsiVersion)"
+           Manufacturer="$(var.Manufacturer)" 
+           UpgradeCode="$(var.UpgradeCode)">
+    
+    <Package InstallerVersion="200"
+             Compressed="yes"
+             InstallScope="perMachine"
+             Platform="x64"
+             Description="$(var.ProductName) $(var.ProductVersion)"
+             Comments="Instana Distribution of OpenTelemetry Collector for Windows"
+             Manufacturer="$(var.Manufacturer)" />
+
+    <!-- Ensure only one version is installed at a time -->
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."
+                  AllowSameVersionUpgrades="yes" />
+    
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Require Windows 10 or later -->
+    <Condition Message="This application requires Windows 10 or later.">
+      <![CDATA[Installed OR (VersionNT >= 603)]]>
+    </Condition>
+
+    <!-- Require Administrator privileges -->
+    <Condition Message="You must be an administrator to install this product.">
+      Privileged
+    </Condition>
+
+    <!-- Feature definition -->
+    <Feature Id="ProductFeature" 
+             Title="Instana OTel Collector" 
+             Level="1"
+             Description="Instana Distribution of OpenTelemetry Collector"
+             ConfigurableDirectory="INSTALLFOLDER">
+      <ComponentGroupRef Id="InstanaCollectorFiles" />
+      <ComponentRef Id="InstanaCollectorService" />
+      <ComponentRef Id="InstanaSupervisorService" />
+      <ComponentRef Id="ConfigEnvironment" />
+      <ComponentRef Id="CreateLogsDirectory" />
+    </Feature>
+
+    <!-- UI Reference -->
+    <UIRef Id="InstanaIdotUI" />
+
+    <!-- Properties for configuration -->
+    <Property Id="INSTALLFOLDER">
+      <RegistrySearch Id="FindInstallLocation"
+                      Root="HKLM"
+                      Key="Software\IBM\InstanaOTelCollector"
+                      Name="InstallLocation"
+                      Type="raw" />
+    </Property>
+
+    <Property Id="INSTANA_OTEL_ENDPOINT_GRPC" Secure="yes" />
+    <Property Id="INSTANA_OTEL_ENDPOINT_HTTP" Secure="yes" />
+    <Property Id="INSTANA_OPAMP_ENDPOINT" Secure="yes" />
+    <Property Id="INSTANA_KEY" Secure="yes" Hidden="yes" />
+    <Property Id="ENABLE_SUPERVISOR" Value="false" />
+
+    <!-- Directory structure -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="InstanaFolder" Name="Instana">
+          <Directory Id="INSTALLFOLDER" Name="instana-otel-collector">
+            <Directory Id="BinFolder" Name="bin" />
+            <Directory Id="ConfigFolder" Name="config" />
+            <Directory Id="LogsFolder" Name="logs" />
+          </Directory>
+        </Directory>
+      </Directory>
+      
+    </Directory>
+
+    <!-- Collector Service Component -->
+    <!-- KeyPath must be the actual executable so Windows SCM registers the correct ImagePath -->
+    <DirectoryRef Id="BinFolder">
+      <Component Id="InstanaCollectorService" Guid="B2C3D4E5-F6A7-4B5C-9D0E-1F2A3B4C5D6E" Win64="yes">
+        <File Id="CollectorBinary"
+              Source="$(var.SourceDir)\bin\instana-otelcol.exe"
+              KeyPath="yes" />
+
+        <ServiceInstall Id="InstanaCollectorServiceInstall"
+                        Type="ownProcess"
+                        Name="InstanaOTelCollector"
+                        DisplayName="Instana OTel Collector"
+                        Description="Instana Distribution of OpenTelemetry Collector - Collects and exports telemetry data"
+                        Start="auto"
+                        Account="LocalSystem"
+                        ErrorControl="normal"
+                        Arguments="--config &quot;[ConfigFolder]config.yaml&quot;">
+          <util:ServiceConfig FirstFailureActionType="restart"
+                             SecondFailureActionType="restart"
+                             ThirdFailureActionType="restart"
+                             RestartServiceDelayInSeconds="60" />
+        </ServiceInstall>
+
+        <ServiceControl Id="StartCollectorService"
+                       Name="InstanaOTelCollector"
+                       Start="install"
+                       Stop="both"
+                       Remove="uninstall"
+                       Wait="yes" />
+
+        <!-- Registry key for install location -->
+        <RegistryKey Root="HKLM" Key="Software\IBM\InstanaOTelCollector">
+          <RegistryValue Type="string" Name="InstallLocation" Value="[INSTALLFOLDER]" KeyPath="no" />
+          <RegistryValue Type="string" Name="Version" Value="$(var.ProductVersion)" KeyPath="no" />
+        </RegistryKey>
+      </Component>
+    </DirectoryRef>
+
+    <!-- Supervisor Service Component (Optional) -->
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="InstanaSupervisorService" Guid="C3D4E5F6-A7B8-4C5D-0E1F-2A3B4C5D6E7F" Win64="yes">
+        <Condition>ENABLE_SUPERVISOR = "true"</Condition>
+        <CreateFolder />
+        
+        <ServiceInstall Id="InstanaSupervisorServiceInstall"
+                        Type="ownProcess"
+                        Name="InstanaOTelSupervisor"
+                        DisplayName="Instana OTel Supervisor"
+                        Description="OpAMP Supervisor for Instana OTel Collector - Manages collector configuration"
+                        Start="auto"
+                        Account="LocalSystem"
+                        ErrorControl="normal">
+          <util:ServiceConfig FirstFailureActionType="restart"
+                             SecondFailureActionType="restart"
+                             ThirdFailureActionType="restart"
+                             RestartServiceDelayInSeconds="60" />
+        </ServiceInstall>
+        
+        <ServiceControl Id="StartSupervisorService"
+                       Name="InstanaOTelSupervisor"
+                       Start="install"
+                       Stop="both"
+                       Remove="uninstall"
+                       Wait="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Configuration Component — installs config.yaml to install directory -->
+    <DirectoryRef Id="ConfigFolder">
+      <Component Id="ConfigEnvironment" Guid="D4E5F6A7-B8C9-4D5E-1F2A-3B4C5D6E7F8A" Win64="yes">
+        <File Id="CollectorConfig"
+              Source="$(var.SourceDir)\config\config.yaml"
+              KeyPath="yes" />
+        <CreateFolder>
+          <util:PermissionEx User="Administrators" GenericAll="yes" />
+          <util:PermissionEx User="SYSTEM" GenericAll="yes" />
+        </CreateFolder>
+      </Component>
+    </DirectoryRef>
+
+    <!-- Create Logs Directory Component -->
+    <DirectoryRef Id="LogsFolder">
+      <Component Id="CreateLogsDirectory" Guid="E5F6A7B8-C9D0-4E5F-2A3B-4C5D6E7F8A9B">
+        <CreateFolder>
+          <util:PermissionEx User="Administrators" GenericAll="yes" />
+          <util:PermissionEx User="SYSTEM" GenericAll="yes" />
+          <util:PermissionEx User="Users" GenericRead="yes" GenericWrite="yes" />
+        </CreateFolder>
+        <RemoveFolder Id="RemoveLogsFolder" On="uninstall" />
+        <RegistryValue Root="HKLM" Key="Software\IBM\InstanaOTelCollector" Name="LogsCreated" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Custom Actions -->
+
+    <!-- Immediate CA: collect user inputs into CustomActionData for the deferred CA -->
+    <CustomAction Id="CollectConfigData"
+                  Property="GenerateConfigFiles"
+                  Value="configDir=[ConfigFolder];endpoint=[INSTANA_OTEL_ENDPOINT_HTTP];key=[INSTANA_KEY];hostname=[%COMPUTERNAME]" />
+
+    <!-- Deferred CA: write config.env and set service registry environment variables -->
+    <CustomAction Id="GenerateConfigFiles"
+                  Script="vbscript"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="check">
+      <![CDATA[
+        ' Parse semicolon-delimited key=value pairs from CustomActionData
+        Dim data, pairs, kv, i
+        Dim configDir, endpoint, agentKey, hostname
+        data = Session.Property("CustomActionData")
+
+        pairs = Split(data, ";")
+        For i = 0 To UBound(pairs)
+          kv = Split(pairs(i), "=", 2)
+          If UBound(kv) = 1 Then
+            Select Case kv(0)
+              Case "configDir"  : configDir  = kv(1)
+              Case "endpoint"   : endpoint   = kv(1)
+              Case "key"        : agentKey   = kv(1)
+              Case "hostname"   : hostname   = kv(1)
+            End Select
+          End If
+        Next
+
+        ' Ensure endpoint has https:// prefix
+        If Left(LCase(endpoint), 8) <> "https://" And Left(LCase(endpoint), 7) <> "http://" Then
+          endpoint = "https://" & endpoint
+        End If
+
+        ' Write config.env to install directory config folder
+        Dim fso, configFile
+        Set fso = CreateObject("Scripting.FileSystemObject")
+        If Not fso.FolderExists(configDir) Then
+          fso.CreateFolder(configDir)
+        End If
+        Set configFile = fso.CreateTextFile(configDir & "config.env", True)
+        configFile.WriteLine "INSTANA_OTEL_ENDPOINT_HTTP=" & endpoint
+        configFile.WriteLine "INSTANA_KEY=" & agentKey
+        configFile.WriteLine "HOSTNAME=" & hostname
+        configFile.Close
+
+        ' Set service-level environment variables in the registry
+        ' On Error Resume Next: service key may not yet be fully committed at this point
+        On Error Resume Next
+        Dim objReg
+        Set objReg = GetObject("winmgmts:{impersonationLevel=impersonate}!\\.\root\default:StdRegProv")
+        Dim envVars(2)
+        envVars(0) = "INSTANA_OTEL_ENDPOINT_HTTP=" & endpoint
+        envVars(1) = "INSTANA_KEY=" & agentKey
+        envVars(2) = "HOSTNAME=" & hostname
+        objReg.SetMultiStringValue &H80000002, _
+          "SYSTEM\CurrentControlSet\Services\InstanaOTelCollector", _
+          "Environment", _
+          envVars
+        On Error GoTo 0
+      ]]>
+    </CustomAction>
+
+    <!-- Installation Sequence -->
+    <InstallExecuteSequence>
+      <Custom Action="CollectConfigData" After="InstallInitialize">NOT Installed</Custom>
+      <Custom Action="GenerateConfigFiles" After="InstallServices">NOT Installed</Custom>
+    </InstallExecuteSequence>
+
+  </Product>
+</Wix>

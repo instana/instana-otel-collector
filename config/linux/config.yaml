@@ -186,7 +186,7 @@ service:
     # Resource attributes for identifying the collector itself
     resource:
       service.name: ${env:INSTANA_OTEL_SERVICE_NAME:-otel-collector}
-      service.version: ${env:INSTANA_OTEL_SERVICE_VERSION:-1.310.0}
+      service.version: ${env:INSTANA_OTEL_SERVICE_VERSION:-1.316.0}
       service.instance.id: ${env:HOSTNAME:-hostname}
       entity.type: ${env:INSTANA_OTEL_ENTITY_TYPE:-otel-collector}
       log.level: ${env:INSTANA_OTEL_LOG_LEVEL:-info}

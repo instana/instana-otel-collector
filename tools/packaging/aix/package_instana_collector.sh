@@ -329,6 +329,23 @@ show_help() {
   exit 0
 }
 
+echo "INFO: Checking dependencies..."
+missing=false
+
+for cmd in tar gzip base64 sed mktemp; do
+  if ! command -v "\$cmd" > /dev/null 2>&1; then
+    echo "ERROR: Required command not found: \$cmd"
+    missing=true
+  fi
+done
+if [ "\$missing" = "true" ]; then
+  echo ""
+  echo "ERROR: Missing dependencies detected."
+  echo "       Please install the GNU core utilities (coreutils) from:"
+  echo "       https://www.ibm.com/support/pages/node/883796"
+  exit 1
+fi
+
 # Default values
 INSTALL_PATH="/opt/instana"
 INSTANA_OTEL_ENDPOINT_GRPC=""
@@ -417,7 +434,7 @@ ENDPOINT_PROTOCOL="\$(echo "\$INSTANA_OTEL_ENDPOINT_GRPC" | sed 's|^\([a-zA-Z][a
 ENDPOINT_DOMAIN="\$(echo "\$INSTANA_OTEL_ENDPOINT_GRPC" | sed 's|^[a-zA-Z][a-zA-Z0-9+.-]*://||' | sed 's|:[0-9][0-9]*$||' | sed 's|/.*$||')"
 
 # Extract port from GRPC endpoint (if any)
-GRPC_PORT="\$(echo "\$INSTANA_OTEL_ENDPOINT_GRPC" | sed -nE 's|.*:([0-9]+).*|\1|p')"
+GRPC_PORT="\$(echo "\$INSTANA_OTEL_ENDPOINT_GRPC" | sed -n 's|.*:\([0-9]\{1,\}\).*|\1|p')"
 
 # If protocol is https and no port is set, assume port 443
 if [[ "\$ENDPOINT_PROTOCOL" == "https://" && -z "\$GRPC_PORT" ]]; then
@@ -444,14 +461,13 @@ fi
 if [[ -z "\$INSTANA_OPAMP_ENDPOINT" ]]; then
   # Transform the endpoint domain based on pattern for OpAMP
 
-  SAAS_REGEX='^otlp(-grpc)?-[a-zA-Z0-9]+-saas\.instana\.\(io\|rocks\)$'
-  ONPREM_REGEX='^otlp-grpc\.[A-Za-z0-9.-]\+$'
+  SAAS_REGEX='^otlp(-grpc)?-[a-zA-Z0-9]+-saas\.instana\.(io|rocks)$'
+  ONPREM_REGEX='^otlp-grpc\.[A-Za-z0-9.-]+$'
 
   if echo "\$ENDPOINT_DOMAIN" | grep -E "\$SAAS_REGEX" >/dev/null 2>&1; then
     OPAMP_DOMAIN="\$(
       echo "\$ENDPOINT_DOMAIN" |
-        sed 's|^otlp-grpc-|opamp-|' |
-        sed 's|^otlp-|opamp-|'
+        sed 's|^otlp-grpc-|opamp-|; s|^otlp-|opamp-|'
     )"
   elif echo "\$ENDPOINT_DOMAIN" | grep -E "\$ONPREM_REGEX" >/dev/null 2>&1; then
     OPAMP_DOMAIN="\$(
@@ -480,8 +496,8 @@ fi
 if [[ -z "\$INSTANA_METRICS_ENDPOINT" ]]; then
   # Transform the endpoint domain based on pattern 
 
-  SAAS_REGEX='^otlp\(-grpc\)\{0,1\}-[a-zA-Z0-9][a-zA-Z0-9]*-saas\.instana\.\(io\|rocks\)$'
-  ONPREM_REGEX='^otlp-grpc\.[A-Za-z0-9.-][A-Za-z0-9.-]*$'
+  SAAS_REGEX='^otlp(-grpc)?-[a-zA-Z0-9]+-saas\.instana\.(io|rocks)$'
+  ONPREM_REGEX='^otlp-grpc\.[A-Za-z0-9.-]+$'
 
   if echo "\$ENDPOINT_DOMAIN" | grep -E "\$SAAS_REGEX" > /dev/null 2>&1; then
     MODIFIED_URL="\$(
@@ -511,18 +527,21 @@ echo "Extracting package to \$INSTALL_PATH..."
 mkdir -p "\$INSTALL_PATH"
 
 # Create a temporary file for the tarball
-TEMP_TAR="\$(mktemp)"
-echo "$BASE64_TAR" | base64 -d > "\$TEMP_TAR"
+TEMP_TAR="\$(mktemp -u)"
+base64 --decode > "\${TEMP_TAR}.gz" << 'EOF_BASE64_TAR'
+$BASE64_TAR
+EOF_BASE64_TAR
 
 # Verify the tarball integrity
-if command -v tar &>/dev/null && ! tar -tf "\$TEMP_TAR" &>/dev/null; then
+if ! gzip -d -c \${TEMP_TAR}.gz | tar -tf - &>/dev/null; then
   echo "Error: The downloaded package appears to be corrupted."
-  rm -f "\$TEMP_TAR"
+  rm -f "\${TEMP_TAR}.gz"
   exit 1
 fi
 
 # Extract the tarball
-tar -xzf "\$TEMP_TAR" -C "\$INSTALL_PATH"
+gzip -d "\${TEMP_TAR}.gz"
+tar -xf "\$TEMP_TAR" -C "\$INSTALL_PATH"
 
 # Delete the temporary tarball
 rm -f "\$TEMP_TAR"
@@ -548,7 +567,8 @@ CONFIG_PATH="\$INSTALL_PATH/collector/config"
 if [[ ! -f "\$CONFIG_PATH/config.yaml" ]]; then
   if [[ -f "\$CONFIG_PATH/config.example.yaml" ]]; then
     echo "Creating config.yaml from config.example.yaml..."
-    install -m 600 "\$CONFIG_PATH/config.example.yaml" "\$CONFIG_PATH/config.yaml"
+    cp "\$CONFIG_PATH/config.example.yaml" "\$CONFIG_PATH/config.yaml"
+    chmod 600 "\$CONFIG_PATH/config.yaml"
   else
     echo "Error: Neither config.yaml nor config.example.yaml found in '\$CONFIG_PATH'. Cannot proceed."
     exit 1

@@ -8,8 +8,8 @@ apiVersion: v2
 name: instana-otel-collector-chart-operator
 
 # Chart version - follows semantic versioning
-version: 1.310.0
-appVersion: 1.310.0
+version: 1.316.0
+appVersion: 1.316.0
 
 # Description of what the chart does
 description: |
@@ -47,7 +47,7 @@ annotations:
 # Dependencies
 dependencies:
   - name: opentelemetry-operator
-    version: "0.97.1"
+    version: "0.108.0"
     repository: "https://open-telemetry.github.io/opentelemetry-helm-charts"
 
 

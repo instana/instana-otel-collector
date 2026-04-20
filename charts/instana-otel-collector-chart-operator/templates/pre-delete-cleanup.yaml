@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: pre-delete
-        image: registry.k8s.io/kubectl:v1.32.7
+        image: {{ .Values.instana.kubectl.image.repository }}:{{ .Values.instana.kubectl.image.tag | default "latest" }}
         command: [
           "kubectl", "delete", "OpenTelemetryCollector", "-n", "{{ .Release.Namespace }}",
           "--all", "--grace-period=60", "--wait=true", "--timeout=120s", "--ignore-not-found=true" ]

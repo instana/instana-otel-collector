@@ -14,7 +14,8 @@ spec:
     spec:
       containers:
       - name: post-install
-        image: registry.k8s.io/kubectl:v1.32.7
+        image: {{ .Values.instana.kubectl.image.repository }}:{{ .Values.instana.kubectl.image.tag | default "latest" }}
+        imagePullPolicy: {{ .Values.instana.kubectl.image.imagePullPolicy | default "IfNotPresent" }}
         command: [
           "kubectl", "wait", "--for=condition=ready", "pod", "-n", "{{ .Release.Namespace }}",
           "-l", "app.kubernetes.io/instance={{ .Release.Name }}", "--timeout=180s" ]

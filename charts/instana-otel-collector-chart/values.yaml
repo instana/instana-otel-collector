@@ -27,6 +27,16 @@
 # instanaEndpoint: "localhost:4317"             # The Instana backend endpoint or Instana Agent endpoint
 # instanaKey: "instanalocal"                    # The Instana agent key to use
 #
+# Images for the custom operator and kubeRBACProxy
+# manager:
+#   image:
+#     repository: "cghcr.io/open-telemetry/opentelemetry-operator/opentelemetry-operator"
+#     tag: "0.136.0"
+# kubeRBACProxy:
+#   image:
+#     repository: "quay.io/brancz/kube-rbac-proxy"
+#     tag: "v0.19.1"
+#
 # OpenShift-specific configuration
 #
 # openshift:
@@ -48,6 +58,16 @@
 # | kubernetesEvents     | No        | Yes         | Collect Kubernetes event stream       |
 # | clusterMetrics       | No        | Yes         | Collect cluster-wide resource metrics |
 
+
+# Instana OpenTelemetry Collector configuration
+instana:
+  # kubectl image configuration
+  kubectl:
+    image:
+      repository: registry.k8s.io/kubectl
+      tag: v1.35.2
+    
+#
 # ------------------------------------------------------------------------------
 # DaemonSet — runs on every node to collect node/pod metrics & logs
 # ------------------------------------------------------------------------------
@@ -82,6 +102,11 @@ daemonset:
       - apiGroups: [""]
         resources: ['nodes', 'nodes/stats', 'nodes/proxy', 'endpoints']
         verbs: ["get", "list", "watch"] # Needed for k8s.node.uid enrichment
+  ports: # Host ports for daemonset collector
+    otlp:
+      hostPort: 14317
+    otlp-http:
+      hostPort: 14318
   config:
     processors:
       memory_limiter: # Prevents OTel collector from exceeding memory limits
@@ -161,6 +186,15 @@ daemonset:
     receivers:
       hostmetrics:
         collection_interval: 30s
+        scrapers:
+          cpu: {}
+          disk: {}
+          filesystem: {}
+          load: {}
+          memory: {}
+          network: {}
+          paging: {}
+          process: {}
       kubeletstats:
         insecure_skip_verify: true
         node: '${env:K8S_NODE_NAME}'
@@ -195,6 +229,7 @@ daemonset:
         endpoint: '${env:INSTANA_ENDPOINT}'
         tls:
           insecure: false # Set false in production for TLS enforcement
+          insecure_skip_verify: true
         headers:
           x-instana-key: '${env:INSTANA_KEY}'
           x-instana-host: '${env:HOSTNAME:-hostname}'
@@ -272,10 +307,10 @@ daemonset:
 # ------------------------------------------------------------------------------
 statefulset:
   mode: statefulset
-  replicaCount: 1
   image:
     repository: icr.io/instana/idot
     tag: latest
+  replicaCount: 1
   presets:
     # Enables the k8sattributesprocessor and adds it to the traces, metrics, and logs pipelines
     kubernetesAttributes:
@@ -301,6 +336,17 @@ statefulset:
     - configMapRef:
         name: idot-env-config # Loads environment variables (Instana keys, endpoint, etc.)
   config:
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: ${env:MY_POD_IP}:4317
+          http:
+            endpoint: ${env:MY_POD_IP}:4318
+      otlp/self:
+        protocols:
+          http:
+            endpoint: ${env:MY_POD_IP}:24318
     processors:
       memory_limiter: # Prevents OTel collector from exceeding memory limits
         check_interval: 1s
@@ -378,15 +424,16 @@ statefulset:
         endpoint: '${env:INSTANA_ENDPOINT}'
         tls:
           insecure: false # Set false in production for TLS enforcement
+          insecure_skip_verify: true
         headers:
           x-instana-key: '${env:INSTANA_KEY}'
           x-instana-host: '${env:HOSTNAME:-hostname}'
       debug: {} # Debugging exporter — writes telemetry to stdout
     service:
       pipelines:
-        metrics:
+        metrics/k8s:
           receivers:
-          - otlp
+          - otlp/self
           - k8s_cluster
           exporters:
           # - debug
@@ -397,7 +444,21 @@ statefulset:
           - memory_limiter        # Protects collector from memory spikes 
           - transform/resource_adjustments
           - batch                 # Batches metrics for efficient export
+        metrics/otlp:
+          receivers:
+          - otlp
+          exporters:
+          # - debug
+          - otlp/instana
+          processors:
+          - resourcedetection/env # Adds environment resource attributes first
+          - k8sattributes         # Enriches telemetry with Kubernetes metadata
+          - memory_limiter        # Protects collector from memory spikes 
+          - batch                 # Batches metrics for efficient export
         logs:
+          receivers:
+          - otlp/self
+          - otlp
           exporters:
           # - debug
           - otlp/instana
@@ -422,7 +483,7 @@ statefulset:
                 exporter:
                   otlp:
                     protocol: http/protobuf
-                    endpoint: http://${env:MY_POD_IP}:4318
+                    endpoint: http://${env:MY_POD_IP}:24318
         # Log telemetry configuration
         logs:
           level: INFO
@@ -431,7 +492,7 @@ statefulset:
                 exporter:
                   otlp:
                     protocol: http/protobuf
-                    endpoint: http://${env:MY_POD_IP}:4318
+                    endpoint: http://${env:MY_POD_IP}:24318
         # Resource attributes for identifying the collector itself
         resource:
           service.name: ${env:INSTANA_OTEL_SERVICE_NAME:-otel-collector}

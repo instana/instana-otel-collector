@@ -1,0 +1,37 @@
+{{/* # Pre-delete job that removes SCC resources */}}
+{{- $usePrivilegedSA := true -}}
+{{- if hasKey .Values "openshift" -}}
+  {{- if hasKey .Values.openshift "daemonset" -}}
+    {{- if hasKey .Values.openshift.daemonset "usePrivilegedServiceAccount" -}}
+      {{- $usePrivilegedSA = .Values.openshift.daemonset.usePrivilegedServiceAccount -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- if and (eq (include "instana-otel-collector.isOpenShift" .) "true") $usePrivilegedSA -}}
+{{- $sccName := printf "%s-daemonset-scc" .Release.Name -}}
+{{- if (.Capabilities.APIVersions.Has "security.openshift.io/v1") }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-pre-delete
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/component: pre-delete
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  annotations:
+    "helm.sh/hook": pre-delete
+    "helm.sh/hook-weight": "3"
+    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+spec:
+  template:
+    spec:
+      containers:
+      - name: pre-delete
+        image: {{ .Values.instana.kubectl.image.repository }}:{{ .Values.instana.kubectl.image.tag | default "latest" }}
+        command: [
+          "kubectl", "delete", "SecurityContextConstraints", "{{ $sccName }}" ]
+      restartPolicy: Never
+      serviceAccountName: {{ .Release.Name }}-cleanup
+  backoffLimit: 3
+{{- end }}
+{{- end }}

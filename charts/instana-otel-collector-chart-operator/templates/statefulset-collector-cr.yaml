@@ -1,20 +1,20 @@
-{{- if .Values.instana.statefulset.enabled }}
+{{- if .Values.statefulset.enabled }}
 apiVersion: opentelemetry.io/v1beta1
 kind: OpenTelemetryCollector
 metadata:
-  name: {{ .Values.instana.statefulset.name | default "idot-statefulset-collector" }}
+  name: {{ .Values.statefulset.name | default "idot-statefulset" }}
   namespace: {{ .Release.Namespace }}
   annotations:
     "helm.sh/hook": post-install
     "helm.sh/hook-weight": "10"
 spec:
   mode: statefulset
-  replicas: {{ .Values.instana.statefulset.replicas | default 1 }}
-  image: "icr.io/instana/idot:latest"
-  imagePullPolicy: "IfNotPresent"
+  replicas: {{ .Values.statefulset.replicas | default 1 }}
+  image: {{ .Values.statefulset.image.repository }}:{{ .Values.statefulset.image.tag | default "latest" }}
+  imagePullPolicy: {{ .Values.statefulset.image.imagePullPolicy }}
   envFrom:
-    {{- if .Values.instana.statefulset.extraEnvsFrom }}
-    {{- toYaml .Values.instana.statefulset.extraEnvsFrom | nindent 4 }}
+    {{- if .Values.statefulset.extraEnvsFrom }}
+    {{- toYaml .Values.statefulset.extraEnvsFrom | nindent 4 }}
     {{- end }}
   env:
     - name: MY_POD_IP
@@ -38,8 +38,8 @@ spec:
     - name: INSTANA_CLUSTER_ID
       value: {{ .Values.instana.clusterID | default "" | quote }}
     # Additional environment variables
-    {{- if .Values.instana.statefulset.env }}
-    {{- range .Values.instana.statefulset.env }}
+    {{- if .Values.statefulset.env }}
+    {{- range .Values.statefulset.env }}
     - name: {{ .name }}
       value: {{ .value | quote }}
     {{- end }}
@@ -52,8 +52,8 @@ spec:
       value: "otel-collector"
     {{- end }}
   config:
-    {{- if .Values.instana.statefulset.config }}
-    {{- toYaml .Values.instana.statefulset.config | nindent 4 }}
+    {{- if .Values.statefulset.config }}
+    {{- toYaml .Values.statefulset.config | nindent 4 }}
     {{- else }}
     receivers:
       otlp:
@@ -80,6 +80,7 @@ spec:
         endpoint: '${env:INSTANA_ENDPOINT}'
         tls:
           insecure: false
+          insecure_skip_verify: true
         headers:
           x-instana-key: '${env:INSTANA_KEY}'
           x-instana-host: '${env:HOSTNAME:-hostname}'

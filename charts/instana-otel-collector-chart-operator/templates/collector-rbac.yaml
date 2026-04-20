@@ -40,7 +40,7 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 subjects:
 - kind: ServiceAccount
-  name: {{ .Values.instana.daemonset.name | default "idot-daemonset" }}-collector
+  name: {{ .Values.daemonset.name | default "idot-daemonset" }}-collector
   namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole
@@ -89,7 +89,7 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 subjects:
 - kind: ServiceAccount
-  name: {{ .Values.instana.statefulset.name | default "idot-statefulset" }}-collector
+  name: {{ .Values.statefulset.name | default "idot-statefulset" }}-collector
   namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole

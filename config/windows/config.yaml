@@ -1,0 +1,195 @@
+---
+# ===== Instana Distribution of OpenTelemetry Collector Configuration for Linux =====
+# This configuration file defines how the Instana Distribution of OpenTelemetry Collector
+# collects, processes, and exports telemetry data (traces, metrics, and logs).
+#
+# Documentation: https://opentelemetry.io/docs/collector/configuration/
+# Instana Documentation: https://www.ibm.com/docs/en/instana-observability/current
+
+# ===== EXTENSIONS =====
+# Extensions provide capabilities that can be added to the collector
+# but are not related to data processing.
+extensions:
+  # Health check extension - provides an HTTP endpoint for health monitoring
+  health_check:
+    # The endpoint path for health checks
+    path: /health
+
+# ===== RECEIVERS =====
+# Receivers collect data from various sources and convert it into
+# the collector's internal format for further processing.
+receivers:
+  # OpenTelemetry Protocol (OTLP) receiver
+  # Collects telemetry data from applications instrumented with OpenTelemetry
+  otlp/receiver:
+    protocols:
+      grpc:
+        endpoint: localhost:24317    # Only accessible from the host system by default
+
+  # File log receiver
+  # Collects logs from files on the local filesystem
+  filelog:
+    include: ["/var/log/*.log"]      # Pattern for log files to collect
+    include_file_path: true          # Include the file path in the log metadata
+
+  # Host metrics receiver
+  # Collects system-level metrics from the host machine
+  hostmetrics:
+    collection_interval: 1m          # How frequently to collect metrics
+    scrapers:
+      cpu:                           # CPU usage metrics
+      load:                          # System load average metrics
+      filesystem:                    # Disk usage and filesystem metrics
+      memory:                        # Memory usage metrics
+      network:                       # Network I/O metrics
+      paging:                        # Memory paging/swap metrics
+      process:                       # Per-process metrics
+        mute_process_exe_error: true # Suppress errors when process executables can't be accessed
+        mute_process_name_error: true # Suppress errors when process names can't be read
+        mute_process_io_error: true  # Suppress errors when process I/O can't be read
+        mute_process_user_error: true # Suppress errors when process user can't be read
+      system:                        # General system metrics (CPU, uptime, etc.)
+
+# ===== PROCESSORS =====
+# Processors transform, filter, or enrich the data as it passes through the collector.
+processors:
+  # Memory limiter - prevents the collector from consuming too much memory
+  # Commented out by default - enable if you need to limit memory usage
+  # memory_limiter:
+  #   check_interval: 1s             # How often to check memory usage
+  #   limit_mib: 512                 # Maximum memory usage in MiB
+
+  # Batch processor - groups data into batches for more efficient export
+  batch: {}                          # Using default settings
+
+  # Transform processor - parses log severity levels from text
+  transform/severity_parse:
+    log_statements:
+      - context: log
+        statements:
+          # Map common log level patterns to standardized severity text
+          - set(severity_text, "Info")  where IsMatch(body.string, ".*INFO.*")
+          - set(severity_text, "Warn")  where IsMatch(body.string, ".*WARN.*")
+          - set(severity_text, "Error") where IsMatch(body.string, ".*ERROR.*")
+          - set(severity_text, "Fatal") where IsMatch(body.string, ".*FATAL.*")
+  
+  # Transform processor - parse spans: not enabled by default.
+  # Link to docs: https://www.ibm.com/docs/en/instana-observability/1.0.307?topic=collector-troublshooting-instana-distribution-opentelemetry
+  # transform/span_parse:
+  #   error_mode: ignore
+  #   trace_statements:
+  #     - context: span
+  #       statements:
+  #         - set(status.code, STATUS_CODE_OK) where attributes["http.status_code"] >= 400 and attributes["http.status_code"] < 500
+
+  # Resource processor - adds resource attributes to telemetry data
+  resource/host:
+    attributes:
+      # Service name for the collector
+      - key: service.name
+        value: ${env:INSTANA_OTEL_SERVICE_NAME:-otel-collector}
+        action: upsert
+      # Hostname for the collector
+      - key: host.name
+        value: ${env:HOSTNAME:-hostname}
+        action: upsert
+        
+  # Additional processors (configured with empty settings for now)
+  filter: {}                         # Filters out unwanted data
+  tail_sampling: {}                  # Samples traces based on their content
+  probabilistic_sampler: {}          # Samples data based on probability
+  k8sattributes: {}                  # Enriches data with Kubernetes metadata
+
+# ===== EXPORTERS =====
+# Exporters send the collected and processed data to various destinations.
+exporters:
+  # Debug exporter (commented out by default)
+  # Useful for development and troubleshooting
+  # debug:
+  #   verbosity: detailed            # Shows detailed information about the data
+  #   # If enabled, add 'debug' to the exporters list in each pipeline
+
+  # OTLP exporter - sends data to Instana backend
+  otlphttp/exporter:
+    # The endpoint to send data to (from environment variable or default)
+    endpoint: ${env:INSTANA_OTEL_ENDPOINT_HTTP:-localhost:4318}
+    # Headers for authentication and identification with Instana
+    headers:
+      x-instana-key: ${env:INSTANA_KEY:-instanalocal}
+      x-instana-host: ${env:HOSTNAME:-hostname}
+    tls:
+      insecure: false            # Set false in production for TLS enforcement
+      insecure_skip_verify: true # Set to false in production for TLS enforcement
+
+# ===== SERVICE =====
+# The service section defines how all the components are connected together.
+service:
+  # List of extensions to enable
+  extensions: [health_check]
+  
+  # Data processing pipelines
+  pipelines:
+    # ===== OTLP Pipeline =====
+    # These pipelines handle data received via OTLP protocol from instrumented applications
+    
+    # Trace data pipeline for OTLP data
+    traces/otlp:
+      receivers: [otlp/receiver]                      # Collect traces from OTLP receiver
+      processors: [batch]                             # Process traces with batching
+      exporters: [otlphttp/exporter]                  # Send traces to Instana backend
+
+    # Log data pipeline for OTLP data
+    logs/otlp:
+      receivers: [otlp/receiver]                      # Collect logs from OTLP receiver
+      processors: [transform/severity_parse, batch]   # Process logs with severity parsing
+      exporters: [otlphttp/exporter]                  # Send logs to Instana backend
+
+    # Metrics data pipeline for OTLP data
+    metrics/otlp:
+      receivers: [otlp/receiver]                      # Collect metrics from OTLP receiver
+      processors: [batch]                             # Process metrics with batching
+      exporters: [otlphttp/exporter]                  # Send metrics to Instana backend
+      
+    # ===== COLLECTOR Pipeline =====
+    # These pipelines handle data collected directly by the collector from the host system
+
+    # Log data pipeline for system logs
+    logs/collector:
+      receivers: [filelog]                                              # Collect logs from files
+      processors: [resource/host, transform/severity_parse, batch]      # Add collector identity
+      exporters: [otlphttp/exporter]                                    # Send logs to Instana backend
+
+    # Metrics data pipeline for system metrics
+    metrics/collector:
+      receivers: [hostmetrics]                        # Collect metrics from host
+      processors: [resource/host, batch]              # Add collector identity
+      exporters: [otlphttp/exporter]                  # Send metrics to Instana backend
+
+  # Collector's own telemetry configuration (self-monitoring)
+  telemetry:
+    # Log telemetry configuration
+    logs:
+      level: ${env:INSTANA_OTEL_LOG_LEVEL:-info} # debug or info, warn, error
+      processors:
+        - batch:
+            exporter:
+              otlp:
+                protocol: grpc
+                endpoint: http://localhost:24317
+    
+    # Metrics telemetry configuration
+    metrics:
+      readers:
+        - periodic:
+            exporter:
+              otlp:
+                protocol: grpc
+                endpoint: http://localhost:24317
+    
+    # Resource attributes for identifying the collector itself
+    resource:
+      service.name: ${env:INSTANA_OTEL_SERVICE_NAME:-otel-collector}
+      service.version: ${env:INSTANA_OTEL_SERVICE_VERSION:-1.316.0}
+      service.instance.id: ${env:HOSTNAME:-hostname}
+      entity.type: ${env:INSTANA_OTEL_ENTITY_TYPE:-otel-collector}
+      log.level: ${env:INSTANA_OTEL_LOG_LEVEL:-info}

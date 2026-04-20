@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Culture="en-US" Language="1033" xmlns="http://schemas.microsoft.com/wix/2006/localization">
+
+  <!-- Product Information -->
+  <String Id="ProductName">Instana OTel Collector</String>
+  <String Id="ManufacturerName">IBM Instana</String>
+  <String Id="ProductDescription">Instana Distribution of OpenTelemetry Collector for Windows</String>
+
+  <!-- Service Information -->
+  <String Id="ServiceName">InstanaOTelCollector</String>
+  <String Id="ServiceDisplayName">Instana OTel Collector</String>
+  <String Id="ServiceDescription">Instana Distribution of OpenTelemetry Collector - Collects and exports telemetry data</String>
+  <String Id="SupervisorServiceName">InstanaOTelSupervisor</String>
+  <String Id="SupervisorServiceDisplayName">Instana OTel Supervisor</String>
+  <String Id="SupervisorServiceDescription">OpAMP Supervisor for Instana OTel Collector - Manages collector configuration</String>
+
+  <!-- Help and Support -->
+  <String Id="HelpLink">https://www.ibm.com/docs/en/instana-observability/current</String>
+  <String Id="SupportLink">https://www.instana.com/support</String>
+  <String Id="AboutLink">https://www.instana.com</String>
+
+</WixLocalization>

@@ -8,7 +8,7 @@
   {{- end -}}
 {{- end -}}
 {{- if and (eq (include "instana-otel-collector.isOpenShift" .) "true") $usePrivilegedSA -}}
-{{- $sccName := printf "%s-collector-scc" .Values.instana.daemonset.name -}}
+{{- $sccName := printf "%s-collector-scc" .Values.daemonset.name -}}
 {{- if (.Capabilities.APIVersions.Has "security.openshift.io/v1") }}
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
@@ -44,6 +44,6 @@ supplementalGroups:
 volumes:
 - '*'
 users:
-- system:serviceaccount:{{ .Release.Namespace }}:{{ .Values.instana.daemonset.name | default "idot-daemonset" }}-collector
+- system:serviceaccount:{{ .Release.Namespace }}:{{ .Values.daemonset.name | default "idot-daemonset" }}-collector
 {{- end -}}
 {{- end -}}

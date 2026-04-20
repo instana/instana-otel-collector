@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  
+  <Fragment>
+    <UI Id="InstanaIdotUI">
+      <!-- Use the WixUI_InstallDir dialog set as base -->
+      <UIRef Id="WixUI_InstallDir" />
+      <UIRef Id="WixUI_ErrorProgressText" />
+      
+      <!-- Set the installation directory property -->
+      <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+      
+      <!-- Custom dialog for Instana configuration -->
+      <DialogRef Id="InstanaIdotConfigDlg" />
+      
+      <!-- Customize the dialog sequence -->
+      <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="InstanaIdotConfigDlg" Order="3">LicenseAccepted = "1"</Publish>
+      <Publish Dialog="InstanaIdotConfigDlg" Control="Back" Event="NewDialog" Value="LicenseAgreementDlg">1</Publish>
+      <Publish Dialog="InstanaIdotConfigDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg">1</Publish>
+      <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="InstanaIdotConfigDlg">1</Publish>
+      
+      <!-- Customize bitmaps and icons -->
+      <Property Id="WIXUI_BANNERBMP" Value="assets\banner.bmp" />
+      <Property Id="WIXUI_DIALOGBMP" Value="assets\welcome.bmp" />
+      <Property Id="ARPPRODUCTICON" Value="InstanaIcon" />
+      
+      <!-- Add/Remove Programs properties -->
+      <Property Id="ARPHELPLINK" Value="https://www.ibm.com/docs/en/instana-observability/current" />
+      <Property Id="ARPURLINFOABOUT" Value="https://www.instana.com" />
+      <Property Id="ARPNOREPAIR" Value="yes" Secure="yes" />
+    </UI>
+
+    <!-- Application Icon -->
+    <Icon Id="InstanaIcon" SourceFile="assets\idot64.ico" />
+
+    <!-- Custom Configuration Dialog -->
+    <UI>
+      <Dialog Id="InstanaIdotConfigDlg" Width="370" Height="270" Title="[ProductName] Configuration">
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="!(loc.InstallDirDlgBannerBitmap)" />
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+        
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Title}Instana Configuration" />
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes" Text="Enter your Instana backend connection details." />
+        
+        <!-- gRPC Endpoint -->
+        <Control Id="GrpcEndpointLabel" Type="Text" X="20" Y="60" Width="290" Height="15" NoPrefix="yes" Text="Instana OTel gRPC Endpoint:" />
+        <Control Id="GrpcEndpointEdit" Type="Edit" X="20" Y="75" Width="320" Height="18" Property="INSTANA_OTEL_ENDPOINT_GRPC" Text="{80}" />
+        <Control Id="GrpcEndpointNote" Type="Text" X="20" Y="95" Width="320" Height="10" NoPrefix="yes" Text="Example: otlp-grpc-blue-saas.instana.io:443" />
+        
+        <!-- HTTP Endpoint (Optional) -->
+        <Control Id="HttpEndpointLabel" Type="Text" X="20" Y="110" Width="290" Height="15" NoPrefix="yes" Text="Instana OTel HTTP Endpoint (optional):" />
+        <Control Id="HttpEndpointEdit" Type="Edit" X="20" Y="125" Width="320" Height="18" Property="INSTANA_OTEL_ENDPOINT_HTTP" Text="{80}" />
+        
+        <!-- Agent Key -->
+        <Control Id="AgentKeyLabel" Type="Text" X="20" Y="150" Width="290" Height="15" NoPrefix="yes" Text="Instana Agent Key:" />
+        <Control Id="AgentKeyEdit" Type="Edit" X="20" Y="165" Width="320" Height="18" Property="INSTANA_KEY" Password="yes" Text="{80}" />
+        
+        <!-- Supervisor Option -->
+        <Control Id="SupervisorCheckbox" Type="CheckBox" X="20" Y="190" Width="320" Height="17" Property="ENABLE_SUPERVISOR" CheckBoxValue="true" Text="Enable OpAMP Supervisor (for remote configuration management)" />
+        
+        <!-- Navigation Buttons -->
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="!(loc.WixUIBack)" />
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="!(loc.WixUINext)">
+          <Publish Event="DoAction" Value="ValidateConfiguration">1</Publish>
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="!(loc.WixUICancel)">
+          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+        </Control>
+      </Dialog>
+    </UI>
+
+    <!-- Validation Custom Action -->
+    <CustomAction Id="ValidateConfiguration"
+                  Script="vbscript"
+                  Execute="immediate">
+      <![CDATA[
+        ' Validate that required fields are filled
+        Dim grpcEndpoint, agentKey
+        grpcEndpoint = Session.Property("INSTANA_OTEL_ENDPOINT_GRPC")
+        agentKey = Session.Property("INSTANA_KEY")
+        
+        If Len(grpcEndpoint) = 0 Then
+          MsgBox "Please enter the Instana OTel gRPC Endpoint.", vbExclamation, "Configuration Required"
+          Session.Property("VALIDATIONFAILED") = "1"
+        ElseIf Len(agentKey) = 0 Then
+          MsgBox "Please enter the Instana Agent Key.", vbExclamation, "Configuration Required"
+          Session.Property("VALIDATIONFAILED") = "1"
+        Else
+          Session.Property("VALIDATIONFAILED") = "0"
+          
+          ' Auto-derive HTTP endpoint if not provided
+          If Len(Session.Property("INSTANA_OTEL_ENDPOINT_HTTP")) = 0 Then
+            ' Simple derivation: use same host but different port
+            Dim httpEndpoint
+            httpEndpoint = grpcEndpoint
+            
+            ' Replace :443 with :4318 or add :4318 if no port specified
+            If InStr(httpEndpoint, ":443") > 0 Then
+              httpEndpoint = Replace(httpEndpoint, ":443", ":4318")
+            ElseIf InStr(httpEndpoint, ":") = 0 Then
+              httpEndpoint = httpEndpoint & ":4318"
+            End If
+            
+            Session.Property("INSTANA_OTEL_ENDPOINT_HTTP") = httpEndpoint
+          End If
+          
+          ' Auto-derive OpAMP endpoint if supervisor is enabled
+          If Session.Property("ENABLE_SUPERVISOR") = "true" And Len(Session.Property("INSTANA_OPAMP_ENDPOINT")) = 0 Then
+            Dim opampEndpoint
+            opampEndpoint = grpcEndpoint
+            
+            ' Transform otlp-grpc to opamp
+            opampEndpoint = Replace(opampEndpoint, "otlp-grpc-", "opamp-")
+            opampEndpoint = Replace(opampEndpoint, "otlp-", "opamp-")
+            
+            ' Use WebSocket protocol
+            If InStr(opampEndpoint, "https://") > 0 Then
+              opampEndpoint = Replace(opampEndpoint, "https://", "wss://")
+            ElseIf InStr(opampEndpoint, "http://") > 0 Then
+              opampEndpoint = Replace(opampEndpoint, "http://", "ws://")
+            Else
+              opampEndpoint = "wss://" & opampEndpoint
+            End If
+            
+            ' Add OpAMP path
+            If InStr(opampEndpoint, "/v1/opamp") = 0 Then
+              opampEndpoint = opampEndpoint & "/v1/opamp"
+            End If
+            
+            Session.Property("INSTANA_OPAMP_ENDPOINT") = opampEndpoint
+          End If
+        End If
+      ]]>
+    </CustomAction>
+
+  </Fragment>
+
+</Wix>

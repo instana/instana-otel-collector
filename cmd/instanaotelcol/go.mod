@@ -4,6 +4,4 @@ module github.com/instana/instana-otel-collector
 
 go 1.23
 
-replace github.ibm.com/instana/instana-otel-collector/receiver/shellreceiver v0.2.1 => /Users/hzhao/projects/opamp/instana-otel-collector/receiver/shellreceiver
-
 replace github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor => ../../processor/tailsamplingprocessor

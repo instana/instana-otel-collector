@@ -36,7 +36,6 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/statsdreceiver v0.136.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/windowseventlogreceiver v0.136.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/zipkinreceiver v0.136.0
-	github.ibm.com/instana/instana-otel-collector/receiver/shellreceiver v0.2.1
 	go.opentelemetry.io/collector/component v1.42.0
 	go.opentelemetry.io/collector/confmap v1.42.0
 	go.opentelemetry.io/collector/confmap/provider/envprovider v1.42.0
@@ -431,8 +430,6 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.3 // indirect
 	sigs.k8s.io/yaml v1.5.0 // indirect
 )
-
-replace github.ibm.com/instana/instana-otel-collector/receiver/shellreceiver v0.2.1 => ../../receiver/shellreceiver
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor => ../../processor/tailsamplingprocessor
 

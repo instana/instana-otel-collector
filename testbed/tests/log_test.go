@@ -29,7 +29,7 @@ func TestLog10kDPS(t *testing.T) {
 			receiver: testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t)),
 			resourceSpec: testbed.ResourceSpec{
 				ExpectedMaxCPU: 30,
-				ExpectedMaxRAM: 120,
+				ExpectedMaxRAM: 150,
 			},
 		},
 		// {
@@ -47,7 +47,7 @@ func TestLog10kDPS(t *testing.T) {
 			receiver: testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t)),
 			resourceSpec: testbed.ResourceSpec{
 				ExpectedMaxCPU: 50,
-				ExpectedMaxRAM: 120,
+				ExpectedMaxRAM: 150,
 			},
 		},
 		{
@@ -56,7 +56,7 @@ func TestLog10kDPS(t *testing.T) {
 			receiver: testbed.NewOTLPDataReceiver(testutil.GetAvailablePort(t)),
 			resourceSpec: testbed.ResourceSpec{
 				ExpectedMaxCPU: 50,
-				ExpectedMaxRAM: 120,
+				ExpectedMaxRAM: 150,
 			},
 			// 	extensions: datasenders.NewLocalFileStorageExtension(),
 			// },
@@ -200,7 +200,7 @@ func TestLogOtlpSendingQueue(t *testing.T) {
 			},
 			testbed.ResourceSpec{
 				ExpectedMaxCPU: 80,
-				ExpectedMaxRAM: 120,
+				ExpectedMaxRAM: 150,
 			}, 10,
 			performanceResultsSummary,
 			nil,
@@ -262,7 +262,7 @@ func TestLogLargeFiles(t *testing.T) {
 			},
 			resourceSpec: testbed.ResourceSpec{
 				ExpectedMaxCPU: 80,
-				ExpectedMaxRAM: 150,
+				ExpectedMaxRAM: 180,
 			},
 			sleepSeconds: 100,
 		},

@@ -109,7 +109,7 @@ exporters:
   # OTLP exporter - sends data to Instana backend
   otlphttp/exporter:
     # The endpoint to send data to (from environment variable or default)
-    endpoint: ${env:INSTANA_OTEL_ENDPOINT_HTTP:-localhost:4318}
+    endpoint: ${env:INSTANA_OTEL_ENDPOINT_HTTP:-http://localhost:4318}
     # Headers for authentication and identification with Instana
     headers:
       x-instana-key: ${env:INSTANA_KEY:-instanalocal}

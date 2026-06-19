@@ -4,6 +4,42 @@ entries:
   - annotations:
       category: Monitoring
     apiVersion: v2
+    appVersion: 1.317.4
+    created: "2026-06-19T15:01:09.746063-04:00"
+    dependencies:
+    - alias: daemonset
+      name: opentelemetry-collector
+      repository: https://open-telemetry.github.io/opentelemetry-helm-charts
+      version: 0.134.0
+    - alias: statefulset
+      name: opentelemetry-collector
+      repository: https://open-telemetry.github.io/opentelemetry-helm-charts
+      version: 0.134.0
+    description: 'Instana''s Distributed OpenTelemetry (IDOT) chart for Kubernetes
+      monitoring. Deploys OpenTelemetry collectors in both DaemonSet and StatefulSet
+      modes to collect metrics, traces, and logs from Kubernetes clusters. '
+    digest: ae30a1c2d4bbe0bd6a5bec2cd3affc9da60f1a82387a70d5562d522190c27e43
+    home: https://www.ibm.com/docs/en/instana-observability
+    keywords:
+    - monitoring
+    - observability
+    - opentelemetry
+    - instana
+    - kubernetes
+    - metrics
+    - traces
+    - logs
+    maintainers:
+    - name: Instana Team
+      url: https://www.ibm.com/products/instana
+    name: instana-otel-collector-chart
+    type: application
+    urls:
+    - https://github.com/instana/instana-otel-collector/releases/download/v1.317.4/instana-otel-collector-chart-latest.tgz
+    version: 1.317.4
+  - annotations:
+      category: Monitoring
+    apiVersion: v2
     appVersion: 1.317.3
     created: "2026-05-28T16:11:10.849009-07:00"
     dependencies:
@@ -365,6 +401,39 @@ entries:
   - annotations:
       category: Monitoring
     apiVersion: v2
+    appVersion: 1.317.4
+    created: "2026-06-19T15:01:09.750065-04:00"
+    dependencies:
+    - name: opentelemetry-operator
+      repository: https://open-telemetry.github.io/opentelemetry-helm-charts
+      version: 0.108.0
+    description: 'Instana''s Distributed OpenTelemetry (IDOT) chart for Kubernetes
+      monitoring with OpenTelemetry Operator. Deploys OpenTelemetry collectors in
+      both DaemonSet and StatefulSet modes to collect metrics, traces, and logs from
+      Kubernetes clusters using the OpenTelemetry Operator. '
+    digest: b2ee11966ff089a45aaf4a70c0c231856e7a13c2bc4697e26416323b1a1b49d2
+    home: https://www.ibm.com/docs/en/instana-observability
+    keywords:
+    - monitoring
+    - observability
+    - opentelemetry
+    - instana
+    - kubernetes
+    - metrics
+    - traces
+    - logs
+    - operator
+    maintainers:
+    - name: Instana Team
+      url: https://www.ibm.com/products/instana
+    name: instana-otel-collector-chart-operator
+    type: application
+    urls:
+    - https://github.com/instana/instana-otel-collector/releases/download/v1.317.4/instana-otel-collector-chart-operator-latest.tgz
+    version: 1.317.4
+  - annotations:
+      category: Monitoring
+    apiVersion: v2
     appVersion: 1.317.3
     created: "2026-05-28T16:11:10.852175-07:00"
     dependencies:
@@ -628,4 +697,4 @@ entries:
     urls:
     - https://github.com/instana/instana-otel-collector/releases/download/v1.310.0/instana-otel-collector-chart-operator-1.310.0.tgz
     version: 1.310.0
-generated: "2026-05-28T16:11:10.846334-07:00"
+generated: "2026-06-19T15:01:09.743255-04:00"

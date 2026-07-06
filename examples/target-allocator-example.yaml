@@ -1,0 +1,78 @@
+# Example overlay for enabling Prometheus scraping with Target Allocator
+#
+# This file is intentionally additive. It is not a copy of the chart's full
+# values.yaml, which helps avoid configuration drift over time.
+#
+# Usage:
+#   helm repo add instana https://instana.github.io/instana-otel-collector
+#   helm install instana-otel-collector instana/instana-otel-collector-chart \
+#     --namespace instana-collector \
+#     --create-namespace \
+#     -f examples/target-allocator-example.yaml
+#
+# Start from the chart's default values.yaml and add only the target allocator-
+# specific configuration shown below.
+
+# Configure Prometheus scraping on the StatefulSet collector tier.
+# The DaemonSet should remain focused on node-local collection such as
+# hostmetrics and kubeletstats.
+statefulset:
+  replicaCount: 3
+
+  config:
+    receivers:
+      prometheus:
+        config:
+          global:
+            scrape_interval: 30s
+            scrape_timeout: 10s
+        # Example only:
+        # Replace <target-allocator-service-name> with the actual Kubernetes
+        # Service DNS name exposed by your target allocator deployment.
+        target_allocator:
+          endpoint: http://<target-allocator-service-name>:80
+          interval: 30s
+          collector_id: ${env:HOSTNAME}
+
+    service:
+      pipelines:
+        metrics:
+          # NOTE: Helm merges lists by replacement, not by appending. This
+          # receivers list will replace any receivers already defined in the
+          # chart's default StatefulSet pipeline. Check the chart's default
+          # values.yaml and manually include any existing receivers you want
+          # to keep alongside the prometheus receiver added here.
+          receivers:
+            - otlp
+            - k8s_cluster
+            - prometheus
+
+# Example discovery selectors for environments using ServiceMonitor/PodMonitor
+# resources. These are examples only and are not currently wired as chart-backed
+# values in the non-operator IDOT chart.
+#
+# targetAllocator:
+#   enabled: true
+#   prometheusCR:
+#     enabled: true
+#     serviceMonitorSelector:
+#       matchLabels:
+#         monitoring: enabled
+#     podMonitorSelector: {}
+#
+# Example ServiceMonitor for validation:
+#
+# apiVersion: monitoring.coreos.com/v1
+# kind: ServiceMonitor
+# metadata:
+#   name: my-app-metrics
+#   namespace: default
+# spec:
+#   selector:
+#     matchLabels:
+#       app: my-application
+#   endpoints:
+#     - port: metrics
+#       path: /metrics
+#       interval: 30s
+

@@ -184,22 +184,9 @@ daemonset:
               - set(resource.attributes["INSTANA_PLUGIN"], "k8s") where resource.attributes["k8s.cluster.uid"] != nil and resource.attributes["entity.type"] != "otel-collector"
               - set(resource.attributes["service.name"], resource.attributes["k8s.cluster.name"]) where resource.attributes["entity.type"] == "otel-collector"
     receivers:
-      # Example only:
-      # If target allocator support is added to this chart in the future,
-      # Prometheus scraping is expected to be configured on the StatefulSet
-      # collector tier rather than the DaemonSet. The target allocator endpoint
-      # below is only a placeholder and would depend on the actual Kubernetes
-      # Service name created for the target allocator.
-      #
-      # prometheus:
-      #   config:
-      #     global:
-      #       scrape_interval: 30s
-      #       scrape_timeout: 10s
-      #   target_allocator:
-      #     endpoint: http://<target-allocator-service-name>:80
-      #     interval: 30s
-      #     collector_id: ${env:HOSTNAME}
+      # Prometheus scraping with Target Allocator belongs on the StatefulSet
+      # tier, not the DaemonSet. See statefulset.config.receivers below, or
+      # examples/target-allocator-example.yaml for an overlay example.
       hostmetrics:
         collection_interval: 30s
         scrapers:
@@ -353,6 +340,21 @@ statefulset:
         name: idot-env-config # Loads environment variables (Instana keys, endpoint, etc.)
   config:
     receivers:
+      # If Target Allocator support is enabled, configure Prometheus scraping
+      # here on the StatefulSet tier.
+      # Replace the endpoint with the actual Kubernetes Service DNS name for
+      # your Target Allocator deployment. See examples/target-allocator-example.yaml
+      # for a full overlay example.
+      #
+      # prometheus:
+      #   config:
+      #     global:
+      #       scrape_interval: 30s
+      #       scrape_timeout: 10s
+      #   target_allocator:
+      #     endpoint: http://instana-otel-allocator.instana-collector.svc.cluster.local:80
+      #     interval: 30s
+      #     collector_id: ${env:HOSTNAME}
       otlp:
         protocols:
           grpc:

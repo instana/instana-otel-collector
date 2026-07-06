@@ -1,14 +1,22 @@
 # Target Allocator Support
 
+## Prerequisites
+
+Before following this guide, ensure the Target Allocator is already deployed in your cluster. The Target Allocator is a separate component that must be running before any of the configuration below will work.
+
+You can deploy it using one of:
+- the [OpenTelemetry Operator](https://github.com/open-telemetry/opentelemetry-operator), which manages the Target Allocator as part of the `OpenTelemetryCollector` custom resource
+- a standalone deployment following the [Target Allocator upstream guide](https://github.com/open-telemetry/opentelemetry-operator/blob/main/cmd/otel-allocator/README.md)
+
 ## Overview
 
 IDOT already includes support for the Prometheus receiver in the collector binary. This document explains how Target Allocator can be used together with Prometheus-based scraping in Kubernetes environments.
 
-In this chart, IDOT deploys both:
+In the Instana Otel Collector Helm chart, IDOT deploys both:
 - a DaemonSet for node-local collection such as `hostmetrics` and `kubeletstats`
 - a StatefulSet for centralized cluster-level collection
 
-If Target Allocator support is added for this chart, the recommended pattern is to configure Prometheus scraping on the StatefulSet tier rather than the DaemonSet tier.
+If Target Allocator support is enabled for this chart, the recommended pattern is to configure Prometheus scraping on the StatefulSet tier rather than the DaemonSet tier.
 
 ## What This Document Covers
 
@@ -17,25 +25,25 @@ This document is intentionally focused on:
 - where Prometheus receiver configuration would belong in IDOT
 - what additional Kubernetes discovery resources are typically required
 
-This document does not claim that the non-operator IDOT Helm chart currently creates all required Target Allocator resources automatically.
+This document does not claim that the non-operator Instana Otel Collector Helm chart currently creates all required Target Allocator resources automatically.
 
 ## Architecture
 
 ```text
 ┌───────────────────────────────────────────────────────────┐
-│                    Kubernetes Cluster                    │
-│                                                          │
-│  ServiceMonitor / PodMonitor resources                   │
-│                    │                                     │
-│                    ▼                                     │
-│           Target Allocator service                       │
-│                    │                                     │
-│                    ▼                                     │
-│         StatefulSet collector replicas                   │
-│         with Prometheus receiver enabled                 │
-│                    │                                     │
-│                    ▼                                     │
-│               Instana backend                            │
+│                    Kubernetes Cluster                     │
+│                                                           │
+│  ServiceMonitor / PodMonitor resources                    │
+│                    │                                      │
+│                    ▼                                      │
+│           Target Allocator service                        │
+│                    │                                      │
+│                    ▼                                      │
+│         StatefulSet collector replicas                    │
+│         with Prometheus receiver enabled                  │
+│                    │                                      │
+│                    ▼                                      │
+│               Instana backend                             │
 └───────────────────────────────────────────────────────────┘
 ```
 
@@ -48,7 +56,7 @@ Consistent hashing is useful for Prometheus scrape target distribution because i
 
 ## Recommended Placement in IDOT
 
-For this chart:
+For the Helm chart:
 - use the DaemonSet for node-local collection such as `hostmetrics` and `kubeletstats`
 - use the StatefulSet for Prometheus scraping if Target Allocator is introduced
 
@@ -66,10 +74,10 @@ The Target Allocator endpoint is based on the Kubernetes Service created for the
 Example:
 ```yaml
 target_allocator:
-  endpoint: http://<target-allocator-service-name>:80
+  endpoint: http://instana-otel-allocator.instana-collector.svc.cluster.local:80
 ```
 
-Replace `<target-allocator-service-name>` with the actual service name in your cluster. This repository currently does not create that service in the non-operator chart, so the exact endpoint depends on how Target Allocator is deployed in your environment.
+The DNS name follows the pattern `<service-name>.<namespace>.svc.cluster.local`. The service name and namespace will vary depending on how the Target Allocator is deployed in your environment. Replace the example above with the actual values from your cluster.
 
 ## Prometheus Discovery Requirements
 
@@ -113,8 +121,8 @@ At a minimum, Prometheus CRD-based discovery usually requires access to resource
 If you are using an overlay file:
 
 ```bash
-helm install instana-otel-collector \
-  --repo https://instana.github.io/instana-otel-collector instana-otel-collector-chart \
+helm repo add instana https://instana.github.io/instana-otel-collector
+helm install instana-otel-collector instana/instana-otel-collector-chart \
   --namespace instana-collector \
   --create-namespace \
   -f examples/target-allocator-example.yaml

@@ -4,8 +4,8 @@
 # values.yaml, which helps avoid configuration drift over time.
 #
 # Usage:
-#   helm install instana-otel-collector \
-#     --repo https://instana.github.io/instana-otel-collector instana-otel-collector-chart \
+#   helm repo add instana https://instana.github.io/instana-otel-collector
+#   helm install instana-otel-collector instana/instana-otel-collector-chart \
 #     --namespace instana-collector \
 #     --create-namespace \
 #     -f examples/target-allocator-example.yaml
@@ -37,6 +37,11 @@ statefulset:
     service:
       pipelines:
         metrics:
+          # NOTE: Helm merges lists by replacement, not by appending. This
+          # receivers list will replace any receivers already defined in the
+          # chart's default StatefulSet pipeline. Check the chart's default
+          # values.yaml and manually include any existing receivers you want
+          # to keep alongside the prometheus receiver added here.
           receivers:
             - otlp
             - k8s_cluster

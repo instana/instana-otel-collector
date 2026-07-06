@@ -1,5 +1,5 @@
 ---
-# ===== Instana Distribution of OpenTelemetry Collector Configuration for Linux =====
+# ===== Instana Distribution of OpenTelemetry Collector Configuration for Windows =====
 # This configuration file defines how the Instana Distribution of OpenTelemetry Collector
 # collects, processes, and exports telemetry data (traces, metrics, and logs).
 #
@@ -27,9 +27,11 @@ receivers:
         endpoint: localhost:24317    # Only accessible from the host system by default
 
   # File log receiver
+  windowseventlog/system:
+    channel: system
   # Collects logs from files on the local filesystem
   filelog:
-    include: ["/var/log/*.log"]      # Pattern for log files to collect
+    include: ["C:\\ProgramData\\**\\logs\\*.log"]      # Pattern for log files to collect, Users can edit to customize the log path
     include_file_path: true          # Include the file path in the log metadata
 
   # Host metrics receiver
@@ -38,7 +40,7 @@ receivers:
     collection_interval: 1m          # How frequently to collect metrics
     scrapers:
       cpu:                           # CPU usage metrics
-      load:                          # System load average metrics
+      # load:                        # System load average metrics (Linux-specific, not available on Windows)
       filesystem:                    # Disk usage and filesystem metrics
       memory:                        # Memory usage metrics
       network:                       # Network I/O metrics
@@ -112,7 +114,7 @@ exporters:
   # OTLP exporter - sends data to Instana backend
   otlphttp/exporter:
     # The endpoint to send data to (from environment variable or default)
-    endpoint: ${env:INSTANA_OTEL_ENDPOINT_HTTP:-localhost:4318}
+    endpoint: ${env:INSTANA_OTEL_ENDPOINT_HTTP:-http://localhost:4318}
     # Headers for authentication and identification with Instana
     headers:
       x-instana-key: ${env:INSTANA_KEY:-instanalocal}
@@ -155,7 +157,7 @@ service:
 
     # Log data pipeline for system logs
     logs/collector:
-      receivers: [filelog]                                              # Collect logs from files
+      receivers: [filelog, windowseventlog/system]                      # Collect logs from files
       processors: [resource/host, transform/severity_parse, batch]      # Add collector identity
       exporters: [otlphttp/exporter]                                    # Send logs to Instana backend
 

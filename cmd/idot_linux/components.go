@@ -86,7 +86,6 @@ func components() (otelcol.Factories, error) {
 		zipkinreceiver.NewFactory(),
 		jaegerreceiver.NewFactory(),
 		awscloudwatchreceiver.NewFactory(),
-		shellreceiver.NewFactory(),
 	)
 	if err != nil {
 		return otelcol.Factories{}, err

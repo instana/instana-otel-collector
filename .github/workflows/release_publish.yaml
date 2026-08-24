@@ -37,37 +37,70 @@ jobs:
           fi
           echo "Version format is valid: $VERSION"
   packaging:
-    name: Package and upload release
+    name: Package and upload release (linux/${{ matrix.arch }})
     needs: versioning
     runs-on: ubuntu-latest
+    strategy:
+      # Publish whichever architectures succeed rather than failing the whole
+      # release if one arch has a problem.
+      fail-fast: false
+      matrix:
+        arch: [amd64, arm64, s390x]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+      # Read the Go version from go.mod so this cannot drift from the module
+      # requirement. Cross-compilation needs no extra tooling because the
+      # packaging script builds with CGO_ENABLED=0.
       - name: Go Setup
         uses: actions/setup-go@v5
         with:
-          go-version: "1.21"
+          go-version-file: cmd/idot_linux/go.mod
 
       - name: Create Release Artifact
+        env:
+          VERSION: ${{ needs.versioning.outputs.version }}
+          ARCH: ${{ matrix.arch }}
         run: |
-          echo "Running packaging script for version: ${{ needs.versioning.outputs.version }}"
-          ./tools/packaging/linux/package_instana_collector.sh ${{ needs.versioning.outputs.version }}
-          cp instana-collector-installer-v${{ needs.versioning.outputs.version }}.sh instana-collector-installer-latest.sh
+          echo "Running packaging script for version: $VERSION (linux/$ARCH)"
+          ./tools/packaging/linux/package_instana_collector.sh --arch "$ARCH" "$VERSION"
           ls -a
 
       - name: Upload Versioned Installer
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          VERSION: ${{ needs.versioning.outputs.version }}
+          ARCH: ${{ matrix.arch }}
         run: |
           echo "Uploading versioned files..."
-          gh release upload ${{ github.ref_name }} instana-collector-installer-v${{ needs.versioning.outputs.version }}.sh
+          gh release upload "${{ github.ref_name }}" "instana-collector-installer-v${VERSION}-linux-${ARCH}.sh"
           echo "Uploaded versioned installer"
 
       - name: Upload Latest Installer
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          VERSION: ${{ needs.versioning.outputs.version }}
+          ARCH: ${{ matrix.arch }}
         run: |
           echo "Uploading latest files..."
-          gh release upload ${{ github.ref_name }} instana-collector-installer-latest.sh
+          cp "instana-collector-installer-v${VERSION}-linux-${ARCH}.sh" "instana-collector-installer-latest-linux-${ARCH}.sh"
+          gh release upload "${{ github.ref_name }}" "instana-collector-installer-latest-linux-${ARCH}.sh"
           echo "Uploaded latest installer"
+
+      # Backward compatibility: before this change, release assets carried no
+      # architecture suffix and were always amd64. Keep publishing those exact
+      # names for amd64 so existing download URLs and automation keep working.
+      - name: Upload legacy unsuffixed assets (amd64 only)
+        if: matrix.arch == 'amd64'
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          VERSION: ${{ needs.versioning.outputs.version }}
+        run: |
+          echo "Uploading legacy unsuffixed asset names for backward compatibility..."
+          cp "instana-collector-installer-v${VERSION}-linux-amd64.sh" "instana-collector-installer-v${VERSION}.sh"
+          cp "instana-collector-installer-v${VERSION}-linux-amd64.sh" "instana-collector-installer-latest.sh"
+          gh release upload "${{ github.ref_name }}" \
+            "instana-collector-installer-v${VERSION}.sh" \
+            "instana-collector-installer-latest.sh"
+          echo "Uploaded legacy assets"

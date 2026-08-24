@@ -31,20 +31,26 @@ Visit the [IBM OpenTelemetry Documentation](https://www.ibm.com/docs/en/instana-
 
 The Instana Distribution of OpenTelemetry Collector supports the following architectures:
 
-| OS      | Architectures                 |
-|---------|-------------------------------|
-| Linux   | x86-64 (amd64), s390x (IBM Z) |
-| Windows | x86-64 (amd64)                |
+| OS      | Architectures                                 |
+|---------|-----------------------------------------------|
+| Linux   | x86-64 (amd64), arm64 (AArch64), s390x (IBM Z)|
+| Windows | x86-64 (amd64)                                |
 
 ### Linux Installation
 
-The installation process is identical for both supported Linux architectures (amd64 and s390x/IBM Z). The only difference is the installer script you need to download.
+The installation process is identical for all supported Linux architectures (amd64, arm64/AArch64 and s390x/IBM Z). The only difference is the installer script you need to download.
 
 #### Step 1: Download the appropriate installer for your architecture
 
 **For x86-64/amd64 systems:**
 ```bash
 curl -Lo instana_otelcol_setup.sh https://github.com/instana/instana-otel-collector/releases/latest/download/instana-otel-collector-installer-latest-linux-amd64.sh
+chmod +x instana_otelcol_setup.sh
+```
+
+**For arm64/AArch64 systems (for example AWS Graviton):**
+```bash
+curl -Lo instana_otelcol_setup.sh https://github.com/instana/instana-otel-collector/releases/latest/download/instana-otel-collector-installer-latest-linux-arm64.sh
 chmod +x instana_otelcol_setup.sh
 ```
 

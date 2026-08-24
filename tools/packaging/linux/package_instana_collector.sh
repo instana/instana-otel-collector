@@ -3,12 +3,18 @@
 # Exit on error, undefined variables, and pipe failures
 set -euo pipefail
 
-SCRIPT_VERSION="1.0.0"
+SCRIPT_VERSION="1.1.0"
 VERSION=""
 VERBOSE=false
 DRY_RUN=false
 SUPERVISOR=false
 TEMP_DIR=""
+# Target architecture for the build. Overridable via --arch or the ARCH env var.
+# Defaults to amd64 to preserve the previous behaviour of this script.
+ARCH="${ARCH:-amd64}"
+# Architectures this script knows how to build. All are cross-compiled from any
+# build host because the collector is built with CGO_ENABLED=0.
+SUPPORTED_ARCHES="amd64 arm64 s390x"
 
 # Function to display script usage
 show_help() {
@@ -21,10 +27,20 @@ Options:
   -h, --help     Show this help message and exit
   -v, --verbose  Enable verbose output
   -d, --dry-run  Run without making changes
-  --version      Show script version
+  -a, --arch     Target architecture: amd64 (default), arm64 or s390x.
+                 May also be set via the ARCH environment variable.
+      --version  Show script version
 
 Arguments:
   version        Version number for the package (required)
+
+Examples:
+  $(basename "$0") 1.2.3                 # build for amd64 (default)
+  $(basename "$0") --arch arm64 1.2.3    # build for arm64
+  ARCH=arm64 $(basename "$0") 1.2.3      # same, via environment
+
+Output:
+  instana-collector-installer-v<version>-linux-<arch>.sh
 EOF
 }
 
@@ -72,6 +88,34 @@ check_dependencies() {
         log "ERROR" "Please install missing dependencies and try again."
         exit 1
     fi
+}
+
+# Function to validate the requested target architecture
+validate_arch() {
+    local valid=false
+    for supported in $SUPPORTED_ARCHES; do
+        if [[ "$ARCH" == "$supported" ]]; then
+            valid=true
+            break
+        fi
+    done
+
+    if [[ "$valid" != "true" ]]; then
+        log "ERROR" "Unsupported architecture: '$ARCH'. Supported: $SUPPORTED_ARCHES"
+        exit 1
+    fi
+
+    log "INFO" "Target architecture: linux/$ARCH"
+}
+
+# Function to configure the Go cross-compilation environment.
+# CGO is disabled so the resulting binary is statically linked and can be
+# cross-compiled for any GOARCH from any build host without a C toolchain.
+setup_build_env() {
+    export GOOS="linux"
+    export GOARCH="$ARCH"
+    export CGO_ENABLED="0"
+    log "DEBUG" "Build env: GOOS=$GOOS GOARCH=$GOARCH CGO_ENABLED=$CGO_ENABLED"
 }
 
 # Function to check available disk space
@@ -267,7 +311,7 @@ package_files() {
     
     # Create tarball
     log "DEBUG" "Creating tarball..."
-    if ! tar -czvf "instana-otel-collector-release-v$VERSION.tar.gz" collector; then
+    if ! tar -czvf "$TARBALL" collector; then
         log "ERROR" "Failed to create tarball"
         exit 1
     fi
@@ -275,9 +319,9 @@ package_files() {
     # Generate checksum
     log "DEBUG" "Generating checksum..."
     if command -v sha256sum &>/dev/null; then
-        sha256sum "instana-otel-collector-release-v$VERSION.tar.gz" > "instana-otel-collector-release-v$VERSION.tar.gz.sha256"
+        sha256sum "$TARBALL" > "$TARBALL.sha256"
     elif command -v shasum &>/dev/null; then
-        shasum -a 256 "instana-otel-collector-release-v$VERSION.tar.gz" > "instana-otel-collector-release-v$VERSION.tar.gz.sha256"
+        shasum -a 256 "$TARBALL" > "$TARBALL.sha256"
     else
         log "WARNING" "Neither sha256sum nor shasum found, skipping checksum generation"
     fi
@@ -312,18 +356,18 @@ create_installer_script() {
     fi
     
     local BASE64_TAR
-    BASE64_TAR=$($base64_cmd < "instana-otel-collector-release-v$VERSION.tar.gz")
+    BASE64_TAR=$($base64_cmd < "$TARBALL")
     
     log "DEBUG" "Creating installer script..."
     
-    cat > "instana-collector-installer-v$VERSION.sh" <<EOL
+    cat > "$INSTALLER" <<EOL
 #!/bin/bash
 
 # Exit on error, undefined variables, and pipe failures
 set -euo pipefail
 
 show_help() {
-  echo "Usage: instana-collector-installer-v$VERSION.sh -e INSTANA_OTEL_ENDPOINT_GRPC [-H INSTANA_OTEL_ENDPOINT_HTTP] [-o INSTANA_OPAMP_ENDPOINT] -a INSTANA_KEY [install_path]"
+  echo "Usage: $INSTALLER -e INSTANA_OTEL_ENDPOINT_GRPC [-H INSTANA_OTEL_ENDPOINT_HTTP] [-o INSTANA_OPAMP_ENDPOINT] -a INSTANA_KEY [install_path]"
   echo "Options:"
   echo "  -h, --help          Show this help message and exit"
   echo "  -e gRPC ENDPOINT    Set the Instana OTel gRPC endpoint (required)"
@@ -577,8 +621,8 @@ fi
 echo "Installation complete. Files are available at \$INSTALL_PATH."
 EOL
     
-    chmod +x "instana-collector-installer-v$VERSION.sh"
-    log "INFO" "Successfully created installer script: instana-collector-installer-v$VERSION.sh"
+    chmod +x "$INSTALLER"
+    log "INFO" "Successfully created installer script: $INSTALLER"
 }
 
 # Function to clean up artifacts
@@ -590,7 +634,7 @@ cleanup() {
         return 0
     fi
     
-    rm -rf otelcol-dev collector "instana-otel-collector-release-v$VERSION.tar.gz"
+    rm -rf otelcol-dev collector "$TARBALL"
     log "DEBUG" "Artifacts cleaned up"
 }
 
@@ -612,6 +656,14 @@ while [[ $# -gt 0 ]]; do
         -d|--dry-run)
             DRY_RUN=true
             shift
+            ;;
+        -a|--arch)
+            if [[ -z "${2-}" ]]; then
+                log "ERROR" "--arch requires a value ($SUPPORTED_ARCHES)"
+                exit 1
+            fi
+            ARCH="$2"
+            shift 2
             ;;
         -*)
             log "ERROR" "Unknown option: $1"
@@ -654,6 +706,17 @@ main() {
     if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
         log "WARNING" "Version '$VERSION' does not appear to follow semantic versioning (X.Y.Z)"
     fi
+
+    # Validate the target architecture and configure the Go build environment
+    validate_arch
+    setup_build_env
+
+    # Artifact names are architecture-qualified so that builds for different
+    # architectures can coexist in the same release without colliding. The
+    # "-linux-<arch>" suffix matches the download URLs already documented in
+    # README.md.
+    TARBALL="instana-otel-collector-release-v${VERSION}-linux-${ARCH}.tar.gz"
+    INSTALLER="instana-collector-installer-v${VERSION}-linux-${ARCH}.sh"
     
     # Check dependencies
     check_dependencies
@@ -685,9 +748,10 @@ main() {
     echo "----------------------------------------"
     echo "Package Summary:"
     echo "  Version: $VERSION"
-    echo "  Installer: instana-collector-installer-v$VERSION.sh"
-    if [[ -f "instana-otel-collector-release-v$VERSION.tar.gz.sha256" ]]; then
-        echo "  Checksum: $(cat "instana-otel-collector-release-v$VERSION.tar.gz.sha256")"
+    echo "  Architecture: linux/$ARCH"
+    echo "  Installer: $INSTALLER"
+    if [[ -f "$TARBALL.sha256" ]]; then
+        echo "  Checksum: $(cat "$TARBALL.sha256")"
     fi
     echo "  Supervisor included: $SUPERVISOR"
     echo "----------------------------------------"

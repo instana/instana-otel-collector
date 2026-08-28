@@ -41,7 +41,7 @@ entries:
       category: Monitoring
     apiVersion: v2
     appVersion: 1.320.2
-    created: "2026-08-28T15:10:26.508004-04:00"
+    created: "2026-08-14T18:21:08.483157-07:00"
     dependencies:
     - alias: daemonset
       name: opentelemetry-collector
@@ -71,7 +71,7 @@ entries:
     name: instana-otel-collector-chart
     type: application
     urls:
-    - https://github.com/instana/instana-otel-collector/releases/download/v1.320.3/instana-otel-collector-chart-latest.tgz
+    - https://github.com/instana/instana-otel-collector/releases/download/v1.320.2/instana-otel-collector-chart-latest.tgz
     version: 1.320.2
   - annotations:
       category: Monitoring
@@ -579,7 +579,7 @@ entries:
       category: Monitoring
     apiVersion: v2
     appVersion: 1.320.2
-    created: "2026-08-28T15:10:26.512131-04:00"
+    created: "2026-08-14T18:21:08.486974-07"
     dependencies:
     - name: opentelemetry-operator
       repository: https://open-telemetry.github.io/opentelemetry-helm-charts
@@ -606,7 +606,7 @@ entries:
     name: instana-otel-collector-chart-operator
     type: application
     urls:
-    - https://github.com/instana/instana-otel-collector/releases/download/v1.320.3/instana-otel-collector-chart-operator-latest.tgz
+    - https://github.com/instana/instana-otel-collector/releases/download/v1.320.2/instana-otel-collector-chart-operator-latest.tgz
     version: 1.320.2
   - annotations:
       category: Monitoring

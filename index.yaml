@@ -579,7 +579,7 @@ entries:
       category: Monitoring
     apiVersion: v2
     appVersion: 1.320.2
-    created: "2026-08-14T18:21:08.486974-07"
+    created: "2026-08-14T18:21:08.486974-07:00"
     dependencies:
     - name: opentelemetry-operator
       repository: https://open-telemetry.github.io/opentelemetry-helm-charts

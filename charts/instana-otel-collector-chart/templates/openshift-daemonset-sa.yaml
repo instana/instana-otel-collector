@@ -21,7 +21,7 @@ metadata:
     app.kubernetes.io/name: daemonset
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- end -}}
+{{- end }}
 ---
 {{- if (.Capabilities.APIVersions.Has "security.openshift.io/v1") }}
 apiVersion: security.openshift.io/v1

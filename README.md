@@ -246,6 +246,14 @@ See the table below for links to supported components
 | Extensions    | [Extensions List](https://github.com/instana/instana-otel-collector/blob/main/docs/extensions.md)  |
 | Providers     | [Provider List](https://github.com/instana/instana-otel-collector/blob/main/docs/providers.md)      |
 
+## Target Allocator Support
+
+The Target Allocator can be used with Prometheus-based scraping to distribute scrape targets across collector replicas. In this repository, the collector binary already includes Prometheus receiver support, while the chart documentation and examples describe how this can be wired with the StatefulSet collector tier.
+
+**Documentation:**
+- [Target Allocator Guide](docs/target-allocator.md) - Overview and setup guidance
+- [Example Overlay](examples/target-allocator-example.yaml) - Additive example configuration
+
 ## OpAmp Support
 
 Coming soon...

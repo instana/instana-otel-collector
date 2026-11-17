@@ -1,0 +1,8 @@
+spanintentprocessor:
+  sampling_percentage: 0.5
+  sampling_bias:
+    normal: 0.5
+    degraded: 0.5
+    outlier: 0.5
+  sampled_traces_cache_size: 50000
+  unsampled_traces_cache_size: 50000
